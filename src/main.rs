@@ -5,7 +5,7 @@ mod modules;
 use modules::youtube_module::download_video;
 use clap::Parser;
 use std::env;
-use log::{info, error};
+use log::{info, LevelFilter};
 use log4rs;
 
 /// Simple utility program
@@ -31,13 +31,18 @@ struct Args {
     /// Verbose mode
     #[clap(short, long)]
     verbose: bool,
+
+    /// Logs output in a file for debug
+    #[clap(short, long)]
+    log_out: bool,
 }
 
-fn setup_logging(verbose: bool) {
+fn setup_logging(verbose: bool, out: bool) {
     // Initialize logging using log4rs programmatically
-    if verbose {
-        let log_format = "[{d(%Y-%m-%dT%H:%M:%S%.f%:z)}] : {l} : {m}{n}";
-        let config = log4rs::Config::builder()
+    let log_format = "[{d(%Y-%m-%dT%H:%M:%S%.f%:z)}] : {l} : {m}{n}";
+
+    let config = if out {
+        log4rs::Config::builder()
             .appender(
                 log4rs::config::Appender::builder()
                     .build("console", Box::new(
@@ -59,16 +64,11 @@ fn setup_logging(verbose: bool) {
                 log4rs::config::Root::builder()
                     .appender("console")
                     .appender("file_verbose")
-                    .build(log::LevelFilter::Trace),
+                    .build(LevelFilter::Trace),
             )
-            .unwrap();
-
-        if let Err(e) = log4rs::init_config(config) {
-            eprintln!("Error initializing logging: {}", e);
-        }
-    } else {
-        let log_format = "[{d(%Y-%m-%dT%H:%M:%S%.f%:z)}] : {l} : {m}{n}";
-        let config = log4rs::Config::builder()
+            .unwrap()
+    } else if verbose {
+        log4rs::Config::builder()
             .appender(
                 log4rs::config::Appender::builder()
                     .build("console", Box::new(
@@ -80,13 +80,30 @@ fn setup_logging(verbose: bool) {
             .build(
                 log4rs::config::Root::builder()
                     .appender("console")
-                    .build(log::LevelFilter::Info),
+                    .build(LevelFilter::Trace),
             )
-            .unwrap();
+            .unwrap()
+    } else {
+        // Adding default error logs 
+        log4rs::Config::builder()
+            .appender(
+                log4rs::config::Appender::builder()
+                    .build("console", Box::new(
+                        log4rs::append::console::ConsoleAppender::builder()
+                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(log_format)))
+                            .build(),
+                    )),
+            )
+            .build(
+                log4rs::config::Root::builder()
+                    .appender("console")
+                    .build(LevelFilter::Error),
+            )
+            .unwrap()
+    };
 
-        if let Err(e) = log4rs::init_config(config) {
-            eprintln!("Error initializing logging: {}", e);
-        }
+    if let Err(e) = log4rs::init_config(config) {
+        eprintln!("Error initializing logging: {}", e);
     }
 }
 
@@ -102,9 +119,9 @@ async fn main() {
         }
     }
 
-    setup_logging(args.verbose); // Set up logging with verbose mode
+    setup_logging(args.verbose, args.log_out); // Set up logging with verbose mode
 
-    // info!("This is Test Log");
+    info!("This is Test Log");
 
     // Check if the name is present
     if let Some(name) = &args.name {
