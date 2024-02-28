@@ -1,5 +1,5 @@
-use std::io::{self, Write};
 use colored::Colorize;
+use std::io::{self, Write};
 
 #[allow(dead_code)]
 pub fn print_hyperlink(path: &std::path::Path) {
@@ -23,4 +23,9 @@ pub fn print_colored_path(path: &std::path::Path) {
     };
 
     println!("{}", colored_path);
+}
+
+pub fn print_error_message(message: &str) {
+    // Use ANSI escape codes to print the message in red
+    eprint!("\x1b[31m{}\x1b[0m", message);
 }

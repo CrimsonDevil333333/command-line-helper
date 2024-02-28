@@ -3,13 +3,14 @@
 mod modules;
 mod utilities;
 
-use modules::youtube_module::download_video;
-use modules::logging_module::setup_logging;
-use utilities::print_colored_path;
-use globwalk::GlobWalkerBuilder;
-use std::path::PathBuf;
-use clap::Parser;
 use log::info;
+use clap::Parser;
+use std::path::PathBuf;
+
+use modules::logging_module::setup_logging;
+use modules::youtube_module::download_video;
+use modules::os_modules::{copy_file,move_file,search_files};
+use utilities::{print_colored_path, print_error_message};
 
 /// Simple utility program
 #[derive(Parser, Debug)]
@@ -46,6 +47,14 @@ struct Args {
     /// Limit the number of search results
     #[clap(short='l', long, default_value = "0")]
     limit: usize,
+
+    /// Copy files to the output path
+    #[clap(long="copy")]
+    copy: Option<PathBuf>,
+
+    /// Move files to the output path
+    #[clap(long="move")]
+    move_files: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -54,38 +63,15 @@ async fn main() {
 
     setup_logging(args.verbose, args.log_out); // Set up logging with verbose mode
 
-    info!("This is starting of new run!!!");
+    info!("This is the starting of a new run!!!");
 
-    // Check if the search option is present
-    if let Some(pattern) = &args.search {
-        // Search for files in the provided output path recursively using globwalk
-        let search_path = PathBuf::from(&args.output_path);
-        let walker = GlobWalkerBuilder::from_patterns(&search_path, &[pattern])
-            .max_depth(if args.limit > 0 { args.limit } else { usize::MAX })
-            .build()
-            .unwrap();
-
-        let mut count = 0;
-        for entry in walker {
-            match entry {
-                Ok(entry) => {
-                    if args.limit > 0 && count >= args.limit {
-                        break;
-                    }
-                    print_colored_path(&entry.path());
-                    // println!("{}", entry.path().display());
-                    count += 1;
-                }
-                Err(e) => eprintln!("Error: {}", e),
-            }
-        }
-    }
-
-    // Check if the name is present
+    // Check if the name is present and neither --copy nor --move are present
     if let Some(name) = &args.name {
-        // Print greetings
-        for _ in 0..args.count {
-            println!("Hello {}!", name);
+        if args.copy.is_none() && args.move_files.is_none() {
+            // Print greetings
+            for _ in 0..args.count {
+                println!("Hello {}!", name);
+            }
         }
     }
 
@@ -94,11 +80,26 @@ async fn main() {
         // Download the video
         println!("Downloading video ...");
         if let Err(err) = download_video(url, &args.output_path.to_string_lossy()).await {
-            eprintln!("Error: {}", err);
+            print_error_message(&format!("Error: {}\n", err));
         }
     }
 
-    if args.name.is_none() && args.url.is_none() && args.search.is_none() {
-        eprintln!("Error: You must provide either a name, a URL, or use --search. Use --help to see the help message.");
+    // Check if the search option is present
+    if let Some(pattern) = &args.search {
+        search_files(pattern ,&args.output_path, &args.limit);
+    }
+
+    // Perform copy based on arguments
+    if let Some(copy_path) = &args.copy {
+        let _ = copy_file(copy_path, &args.output_path, &args.name);
+    }
+
+    // Perform move based on arguments
+    if let Some(move_path) = &args.move_files {
+        let _ = move_file(move_path, &args.output_path, &args.name);
+    }
+
+    if args.name.is_none() && args.url.is_none() && args.search.is_none() && args.copy.is_none() && args.move_files.is_none() {
+        print_error_message("Error: You must provide either a name, a URL, use --search, or use --copy/--move. Use --help to see the help message.\n");
     }
 }

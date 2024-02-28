@@ -1,5 +1,5 @@
-use log::LevelFilter;
 use log4rs;
+use log::LevelFilter;
 
 pub fn setup_logging(verbose: bool, out: bool) {
     // Initialize logging using log4rs programmatically
