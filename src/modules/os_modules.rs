@@ -7,6 +7,7 @@ use globwalk::GlobWalkerBuilder;
 
 use crate::print_colored_path;
 use crate::print_error_message;
+
 // Function to copy a file
 pub fn copy_file(src: &PathBuf, dest: &Path, custom_name: &Option<String>) -> io::Result<()> {
     let src_str = src.to_str().expect("Invalid source file path");
@@ -27,6 +28,7 @@ pub fn move_file(src: &PathBuf, dest: &Path, custom_name: &Option<String>) -> io
     Ok(())
 }
 
+// Function to search a file
 pub fn search_files(pattern: &String,s_path: &PathBuf, size: &usize) {
         let search_path = PathBuf::from(s_path);
         let walker = GlobWalkerBuilder::from_patterns(&search_path, &[pattern])

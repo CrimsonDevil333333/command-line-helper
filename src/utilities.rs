@@ -8,7 +8,7 @@ pub fn print_hyperlink(path: &std::path::Path) {
         io::stdout().write_all(hyperlink.as_bytes()).expect("Failed to write hyperlink to stdout");
         println!(); // Move to the next line after the hyperlink
     } else {
-        eprintln!("Error converting path to string");
+        print_error_message("Error converting path to string\n");
     }
 }
 

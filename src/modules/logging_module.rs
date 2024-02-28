@@ -1,6 +1,8 @@
 use log4rs;
 use log::LevelFilter;
 
+use crate::print_error_message;
+
 pub fn setup_logging(verbose: bool, out: bool) {
     // Initialize logging using log4rs programmatically
     let log_format = "[{d(%Y-%m-%dT%H:%M:%S%.f%:z)}] : {l} : {m}{n}";
@@ -48,7 +50,7 @@ pub fn setup_logging(verbose: bool, out: bool) {
             )
             .unwrap()
     } else {
-        // Adding default error logs 
+        // Adding default error logs
         log4rs::Config::builder()
             .appender(
                 log4rs::config::Appender::builder()
@@ -67,6 +69,6 @@ pub fn setup_logging(verbose: bool, out: bool) {
     };
 
     if let Err(e) = log4rs::init_config(config) {
-        eprintln!("Error initializing logging: {}", e);
+        print_error_message(&format!("Error initializing logging: {}\n", e));
     }
 }
