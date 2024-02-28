@@ -1,127 +1,85 @@
 // main.rs
 
 mod modules;
+mod utilities;
 
 use modules::youtube_module::download_video;
+use modules::logging_module::setup_logging;
+use utilities::print_colored_path;
+use globwalk::GlobWalkerBuilder;
+use std::path::PathBuf;
 use clap::Parser;
-use std::env;
-use log::{info, LevelFilter};
-use log4rs;
+use log::info;
 
 /// Simple utility program
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Args {
     /// Name of the person to greet
-    #[clap(short, long)]
+    #[clap(short='n', long)]
     name: Option<String>,
 
     /// Youtube URL
-    #[clap(short, long)]
+    #[clap(short='u', long)]
     url: Option<String>,
 
     /// Number of times to greet
-    #[clap(short, long, default_value = "1")]
+    #[clap(short='c', long, default_value = "1")]
     count: u8,
 
     /// Output path for downloaded video
-    #[clap(short, long, default_value = ".")]
+    #[clap(short='p', long, default_value = ".")]
     output_path: std::path::PathBuf,
 
     /// Verbose mode
-    #[clap(short, long)]
+    #[clap(short='v', long)]
     verbose: bool,
 
     /// Logs output in a file for debug
-    #[clap(short, long)]
+    #[clap(short='o', long)]
     log_out: bool,
-}
 
-fn setup_logging(verbose: bool, out: bool) {
-    // Initialize logging using log4rs programmatically
-    let log_format = "[{d(%Y-%m-%dT%H:%M:%S%.f%:z)}] : {l} : {m}{n}";
+    /// Search for files in the provided output path
+    #[clap(short='s', long)]
+    search: Option<String>,
 
-    let config = if out {
-        log4rs::Config::builder()
-            .appender(
-                log4rs::config::Appender::builder()
-                    .build("console", Box::new(
-                        log4rs::append::console::ConsoleAppender::builder()
-                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(log_format)))
-                            .build(),
-                    )),
-            )
-            .appender(
-                log4rs::config::Appender::builder()
-                    .build("file_verbose", Box::new(
-                        log4rs::append::file::FileAppender::builder()
-                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(log_format)))
-                            .build("logs.log")
-                            .unwrap(),
-                    )),
-            )
-            .build(
-                log4rs::config::Root::builder()
-                    .appender("console")
-                    .appender("file_verbose")
-                    .build(LevelFilter::Trace),
-            )
-            .unwrap()
-    } else if verbose {
-        log4rs::Config::builder()
-            .appender(
-                log4rs::config::Appender::builder()
-                    .build("console", Box::new(
-                        log4rs::append::console::ConsoleAppender::builder()
-                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(log_format)))
-                            .build(),
-                    )),
-            )
-            .build(
-                log4rs::config::Root::builder()
-                    .appender("console")
-                    .build(LevelFilter::Trace),
-            )
-            .unwrap()
-    } else {
-        // Adding default error logs 
-        log4rs::Config::builder()
-            .appender(
-                log4rs::config::Appender::builder()
-                    .build("console", Box::new(
-                        log4rs::append::console::ConsoleAppender::builder()
-                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(log_format)))
-                            .build(),
-                    )),
-            )
-            .build(
-                log4rs::config::Root::builder()
-                    .appender("console")
-                    .build(LevelFilter::Error),
-            )
-            .unwrap()
-    };
-
-    if let Err(e) = log4rs::init_config(config) {
-        eprintln!("Error initializing logging: {}", e);
-    }
+    /// Limit the number of search results
+    #[clap(short='l', long, default_value = "0")]
+    limit: usize,
 }
 
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
 
-    // Set default output path to the current working directory
-    let mut output_path = args.output_path.clone();
-    if output_path.to_string_lossy() == "." {
-        if let Ok(current_dir) = env::current_dir() {
-            output_path = current_dir;
-        }
-    }
-
     setup_logging(args.verbose, args.log_out); // Set up logging with verbose mode
 
-    info!("This is Test Log");
+    info!("This is starting of new run!!!");
+
+    // Check if the search option is present
+    if let Some(pattern) = &args.search {
+        // Search for files in the provided output path recursively using globwalk
+        let search_path = PathBuf::from(&args.output_path);
+        let walker = GlobWalkerBuilder::from_patterns(&search_path, &[pattern])
+            .max_depth(if args.limit > 0 { args.limit } else { usize::MAX })
+            .build()
+            .unwrap();
+
+        let mut count = 0;
+        for entry in walker {
+            match entry {
+                Ok(entry) => {
+                    if args.limit > 0 && count >= args.limit {
+                        break;
+                    }
+                    print_colored_path(&entry.path());
+                    // println!("{}", entry.path().display());
+                    count += 1;
+                }
+                Err(e) => eprintln!("Error: {}", e),
+            }
+        }
+    }
 
     // Check if the name is present
     if let Some(name) = &args.name {
@@ -140,7 +98,7 @@ async fn main() {
         }
     }
 
-    if args.name.is_none() && args.url.is_none() {
-        eprintln!("Error: You must provide either a name or a URL. Use --help to see the help message.");
+    if args.name.is_none() && args.url.is_none() && args.search.is_none() {
+        eprintln!("Error: You must provide either a name, a URL, or use --search. Use --help to see the help message.");
     }
 }
