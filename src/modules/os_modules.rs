@@ -31,7 +31,7 @@ pub fn move_file(src: &PathBuf, dest: &Path, custom_name: &Option<String>) -> io
 // Function to search a file
 pub fn search_files(pattern: &String,s_path: &PathBuf, size: &usize) {
         let search_path = PathBuf::from(s_path);
-        let walker = GlobWalkerBuilder::from_patterns(&search_path, &[pattern])
+        let walker = GlobWalkerBuilder::from_patterns(search_path, &[pattern])
             .max_depth(if *size > 0 { *size } else { usize::MAX })
             .build()
             .unwrap();
@@ -43,7 +43,7 @@ pub fn search_files(pattern: &String,s_path: &PathBuf, size: &usize) {
                     if *size > 0 && count >= *size {
                         break;
                     }
-                    print_colored_path(&entry.path());
+                    print_colored_path(entry.path());
                     // println!("{}", entry.path().display());
                     count += 1;
                 }
