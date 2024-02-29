@@ -130,6 +130,8 @@ async fn main() {
 
         // Perform the action
         execute_language_action(&cleaned_language_str, &cleaned_action_str);
+    } else if args.language.is_none() && args.action.is_none() {
+        // Both language and action are empty Do Nothing
     } else {
         print_error_message("Error: You must provide both --language and --action. Use --help to see the help message.\n");
     }
@@ -176,6 +178,9 @@ async fn main() {
         && args.language.is_none()
         && args.action.is_none()
     {
-        print_error_message("Error: You must provide either a name, a URL, use --search, or use --copy/--move. Use --help to see the help message.\n");
+        print_error_message(
+            "Error: You must provide either a name, a URL, use --search, or use --copy/--move. \
+            Additionally, provide --language and --action. Use --help to see the help message.\n"
+        );
     }
 }
