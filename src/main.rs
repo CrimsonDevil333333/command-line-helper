@@ -9,61 +9,130 @@ use std::path::PathBuf;
 
 use modules::logging_module::setup_logging;
 use modules::youtube_module::download_video;
-use modules::os_modules::{copy_file,move_file,search_files};
-use utilities::{print_colored_path, print_error_message};
+use modules::language_module::execute_language_action;
+use modules::os_modules::{copy_file, move_file, search_files};
+use utilities::{print_colored_path, print_error_message, is_language_installed, suggest_installation};
 
-/// Simple utility program
+#[derive(Debug, Clone)]
+pub enum Language {
+    Java,
+    Python,
+    Dotnet,
+    Rust,
+    Npm,
+}
+
+#[derive(Debug, Clone)]
+pub enum Action {
+    Run,
+    Build,
+    Test,
+    Clean,
+}
+
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Args {
     /// Name of the person to greet
-    #[clap(short='n', long)]
+    #[clap(short = 'n', long)]
     name: Option<String>,
 
     /// Youtube URL
-    #[clap(short='u', long)]
+    #[clap(short = 'u', long)]
     url: Option<String>,
 
     /// Number of times to greet
-    #[clap(short='c', long, default_value = "1")]
+    #[clap(short = 'c', long, default_value = "1")]
     count: u8,
 
     /// Output path for downloaded video
-    #[clap(short='p', long, default_value = ".")]
+    #[clap(short = 'p', long, default_value = ".")]
     output_path: std::path::PathBuf,
 
     /// Verbose mode
-    #[clap(short='v', long)]
+    #[clap(short = 'v', long)]
     verbose: bool,
 
     /// Logs output in a file for debug
-    #[clap(short='o', long)]
+    #[clap(short = 'o', long = "logs-out")]
     log_out: bool,
 
     /// Search for files in the provided output path
-    #[clap(short='s', long)]
+    #[clap(short = 's', long)]
     search: Option<String>,
 
     /// Limit the number of search results
-    #[clap(short='l', long, default_value = "0")]
+    #[clap(short = 'l', long, default_value = "0")]
     limit: usize,
 
     /// Copy files to the output path
-    #[clap(long="copy")]
+    #[clap(long = "copy")]
     copy: Option<PathBuf>,
 
     /// Move files to the output path
-    #[clap(long="move")]
+    #[clap(long = "move")]
     move_files: Option<PathBuf>,
+
+    /// Language to perform the action on
+    #[clap(short = 'L', long)]
+    language: Option<String>,
+
+    /// Action to perform
+    #[clap(short = 'r', long)]
+    action: Option<String>,
+}
+
+fn validate_language_action(language: &Option<String>, action: &Option<String>) -> Result<(), String> {
+    match (language.as_deref(), action.as_deref()) {
+        (Some(lang), Some(act)) => {
+            let lang_lower = lang.to_lowercase();
+            let act_lower = act.to_lowercase();
+
+            if !["java", "python", "dotnet", "rust", "npm"].contains(&lang_lower.as_str()) {
+                return Err(format!("Invalid language: {}", lang));
+            }
+
+            if !["run", "build", "test", "clean"].contains(&act_lower.as_str()) {
+                return Err(format!("Invalid action: {}", act));
+            }
+
+            Ok(())
+        }
+        _ => Ok(()), // Both language and action are empty, so skip validation
+    }
 }
 
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
 
-    setup_logging(args.verbose, args.log_out); // Set up logging with verbose mode
+    setup_logging(args.verbose, args.log_out);
 
     info!("This is the starting of a new run!!!");
+
+    if let Err(err) = validate_language_action(&args.language, &args.action) {
+        print_error_message(&format!("Error: {}\n", err));
+        return;
+    }
+
+    // Check if language and action are provided
+    if let (Some(language), Some(action)) = (&args.language, &args.action) {
+        let language_str = format!("{:?}", language).to_lowercase(); // Convert Language enum to lowercase string
+        let action_str = format!("{:?}", action).to_lowercase(); // Convert Action enum to lowercase string
+
+        // Check if the language is installed
+        let cleaned_language_str = language_str.replace("\"rust\"", "cargo").replace("\"", "");
+        let cleaned_action_str = action_str.replace("\"", "");
+        
+        if !is_language_installed(&cleaned_language_str) {
+            suggest_installation(&cleaned_language_str);
+        }
+
+        // Perform the action
+        execute_language_action(&cleaned_language_str, &cleaned_action_str);
+    } else {
+        print_error_message("Error: You must provide both --language and --action. Use --help to see the help message.\n");
+    }
 
     // Check if the name is present and neither --copy nor --move are present
     if let Some(name) = &args.name {
@@ -86,7 +155,7 @@ async fn main() {
 
     // Check if the search option is present
     if let Some(pattern) = &args.search {
-        search_files(pattern ,&args.output_path, &args.limit);
+        search_files(pattern, &args.output_path, &args.limit);
     }
 
     // Perform copy based on arguments
@@ -99,7 +168,14 @@ async fn main() {
         let _ = move_file(move_path, &args.output_path, &args.name);
     }
 
-    if args.name.is_none() && args.url.is_none() && args.search.is_none() && args.copy.is_none() && args.move_files.is_none() {
+    if args.name.is_none()
+        && args.url.is_none()
+        && args.search.is_none()
+        && args.copy.is_none()
+        && args.move_files.is_none()
+        && args.language.is_none()
+        && args.action.is_none()
+    {
         print_error_message("Error: You must provide either a name, a URL, use --search, or use --copy/--move. Use --help to see the help message.\n");
     }
 }
