@@ -34,33 +34,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
-
       - name: Build
         run: cargo build --release
-
       - name: Run tests
         run: cargo test
-
       - name: Package and Upload Release Artifacts
         uses: actions/upload-artifact@v4.3.1
         with:
           name: release-artifacts
           path: target/release/command_line_helper*
-
-  release:
-    runs-on: windows-latest
-    needs: build
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Generate release tag
         id: tag
         run: |
           echo "::set-output name=release_tag::UserBuild_$(date +"%Y.%m.%d_%H-%M")"
-
       - name: GH Release
         uses: softprops/action-gh-release@v0.1.15
         with:
