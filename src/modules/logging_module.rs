@@ -1,5 +1,5 @@
-use log4rs;
 use log::LevelFilter;
+use log4rs;
 
 use crate::print_error_message;
 
@@ -10,21 +10,29 @@ pub fn setup_logging(verbose: bool, out: bool) {
     let config = if out {
         log4rs::Config::builder()
             .appender(
-                log4rs::config::Appender::builder()
-                    .build("console", Box::new(
+                log4rs::config::Appender::builder().build(
+                    "console",
+                    Box::new(
                         log4rs::append::console::ConsoleAppender::builder()
-                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(log_format)))
+                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(
+                                log_format,
+                            )))
                             .build(),
-                    )),
+                    ),
+                ),
             )
             .appender(
-                log4rs::config::Appender::builder()
-                    .build("file_verbose", Box::new(
+                log4rs::config::Appender::builder().build(
+                    "file_verbose",
+                    Box::new(
                         log4rs::append::file::FileAppender::builder()
-                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(log_format)))
+                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(
+                                log_format,
+                            )))
                             .build("logs.log")
                             .unwrap(),
-                    )),
+                    ),
+                ),
             )
             .build(
                 log4rs::config::Root::builder()
@@ -36,12 +44,16 @@ pub fn setup_logging(verbose: bool, out: bool) {
     } else if verbose {
         log4rs::Config::builder()
             .appender(
-                log4rs::config::Appender::builder()
-                    .build("console", Box::new(
+                log4rs::config::Appender::builder().build(
+                    "console",
+                    Box::new(
                         log4rs::append::console::ConsoleAppender::builder()
-                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(log_format)))
+                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(
+                                log_format,
+                            )))
                             .build(),
-                    )),
+                    ),
+                ),
             )
             .build(
                 log4rs::config::Root::builder()
@@ -53,12 +65,16 @@ pub fn setup_logging(verbose: bool, out: bool) {
         // Adding default error logs
         log4rs::Config::builder()
             .appender(
-                log4rs::config::Appender::builder()
-                    .build("console", Box::new(
+                log4rs::config::Appender::builder().build(
+                    "console",
+                    Box::new(
                         log4rs::append::console::ConsoleAppender::builder()
-                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(log_format)))
+                            .encoder(Box::new(log4rs::encode::pattern::PatternEncoder::new(
+                                log_format,
+                            )))
                             .build(),
-                    )),
+                    ),
+                ),
             )
             .build(
                 log4rs::config::Root::builder()

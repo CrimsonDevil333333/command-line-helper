@@ -1,14 +1,29 @@
 use std::env;
-use std::path::PathBuf;
 use std::io::{self, Write};
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+
+// Helper function to clean language string
+pub fn clean_language_string(language: &String) -> String {
+    format!("{:?}", language)
+        .to_lowercase()
+        .replace("\"rust\"", "cargo")
+        .replace("\"", "")
+}
+
+// Helper function to clean action string
+pub fn clean_action_string(action: &String) -> String {
+    format!("{:?}", action).to_lowercase().replace("\"", "")
+}
 
 #[allow(dead_code)]
 pub fn print_hyperlink(path: &std::path::Path) {
     if let Some(path_str) = path.to_str() {
         let hyperlink = format!("\x1B]8;;{}\x07{}\x1B]8;;\x07", path_str, path_str);
-        io::stdout().write_all(hyperlink.as_bytes()).expect("Failed to write hyperlink to stdout");
+        io::stdout()
+            .write_all(hyperlink.as_bytes())
+            .expect("Failed to write hyperlink to stdout");
         println!(); // Move to the next line after the hyperlink
     } else {
         print_error_message("Error converting path to string\n");
@@ -22,8 +37,8 @@ pub fn get_current_os() -> &'static str {
 pub fn is_language_installed(language: &str) -> bool {
     let status = Command::new(language)
         .arg("--version")
-        .stdout(Stdio::null())  // Redirect standard output to null
-        .stderr(Stdio::null())  // Redirect standard error to null
+        .stdout(Stdio::null()) // Redirect standard output to null
+        .stderr(Stdio::null()) // Redirect standard error to null
         .status();
 
     if let Ok(status) = status {
@@ -36,15 +51,24 @@ pub fn is_language_installed(language: &str) -> bool {
 
 pub fn suggest_installation(language: &str) {
     let os_info = get_current_os();
-    
+
     print_error_message(&format!("{} is not installed on {}.\n", language, os_info));
 
     // Add installation suggestions based on the OS
     match os_info {
-        "linux" => println!("Consider using your package manager to install {}.", language),
+        "linux" => println!(
+            "Consider using your package manager to install {}.",
+            language
+        ),
         "macos" => println!("Consider using Homebrew to install {}.", language),
-        "windows" => println!("Consider downloading {} from the official website.", language),
-        _ => println!("Unable to provide installation suggestions for {} on {}.", language, os_info),
+        "windows" => println!(
+            "Consider downloading {} from the official website.",
+            language
+        ),
+        _ => println!(
+            "Unable to provide installation suggestions for {} on {}.",
+            language, os_info
+        ),
     }
 }
 
@@ -58,10 +82,19 @@ pub fn validate_and_suggest_installation(language: &str) {
 
         // Add installation suggestions based on the OS
         match os_info {
-            "linux" => println!("Consider using your package manager to install {}.", language),
+            "linux" => println!(
+                "Consider using your package manager to install {}.",
+                language
+            ),
             "macos" => println!("Consider using Homebrew to install {}.", language),
-            "windows" => println!("Consider downloading {} from the official website.", language),
-            _ => println!("Unable to provide installation suggestions for {} on {}.", language, os_info),
+            "windows" => println!(
+                "Consider downloading {} from the official website.",
+                language
+            ),
+            _ => println!(
+                "Unable to provide installation suggestions for {} on {}.",
+                language, os_info
+            ),
         }
     }
 }
@@ -112,17 +145,20 @@ pub fn update_path_with_current_exe() {
     }
 }
 
-
 pub fn print_colored_path(path: &std::path::Path) {
     let path_str = path.display().to_string();
     let mut stdout = StandardStream::stdout(ColorChoice::Auto);
-    
+
     if path.is_file() {
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green))).unwrap();
+        stdout
+            .set_color(ColorSpec::new().set_fg(Some(Color::Green)))
+            .unwrap();
     } else if path.is_dir() {
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Blue))).unwrap();
+        stdout
+            .set_color(ColorSpec::new().set_fg(Some(Color::Blue)))
+            .unwrap();
     }
-    
+
     write!(stdout, "{}", path_str).unwrap();
     stdout.reset().unwrap();
     println!();
@@ -130,7 +166,9 @@ pub fn print_colored_path(path: &std::path::Path) {
 
 pub fn print_error_message(message: &str) {
     let mut stderr = StandardStream::stderr(ColorChoice::Auto);
-    stderr.set_color(ColorSpec::new().set_fg(Some(Color::Red))).unwrap();
+    stderr
+        .set_color(ColorSpec::new().set_fg(Some(Color::Red)))
+        .unwrap();
     write!(stderr, "{}", message).unwrap();
     stderr.reset().unwrap();
 }
@@ -149,8 +187,8 @@ mod tests {
     }
 
     #[test]
-    fn test_os_info(){
-        assert_eq!(get_current_os(),"windows");
+    fn test_os_info() {
+        assert_eq!(get_current_os(), "windows");
     }
 
     #[test]

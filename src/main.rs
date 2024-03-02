@@ -3,15 +3,19 @@
 mod modules;
 mod utilities;
 
-use log::info;
 use clap::Parser;
+use log::info;
 use std::path::PathBuf;
 
-use modules::logging_module::setup_logging;
-use modules::youtube_module::download_video;
+use modules::language_identifier_module::identify_project_type;
 use modules::language_module::execute_language_action;
+use modules::logging_module::setup_logging;
 use modules::os_modules::{copy_file, move_file, search_files};
-use utilities::{print_colored_path, print_error_message, is_language_installed, suggest_installation};
+use modules::youtube_module::download_video;
+use utilities::{
+    clean_action_string, clean_language_string, is_language_installed, print_colored_path,
+    print_error_message, suggest_installation,
+};
 
 #[derive(Debug, Clone)]
 pub enum Language {
@@ -82,7 +86,10 @@ struct Args {
     action: Option<String>,
 }
 
-fn validate_language_action(language: &Option<String>, action: &Option<String>) -> Result<(), String> {
+fn validate_language_action(
+    language: &Option<String>,
+    action: &Option<String>,
+) -> Result<(), String> {
     match (language.as_deref(), action.as_deref()) {
         (Some(lang), Some(act)) => {
             let lang_lower = lang.to_lowercase();
@@ -115,25 +122,41 @@ async fn main() {
         return;
     }
 
-    // Check if language and action are provided
-    if let (Some(language), Some(action)) = (&args.language, &args.action) {
-        let language_str = format!("{:?}", language).to_lowercase(); // Convert Language enum to lowercase string
-        let action_str = format!("{:?}", action).to_lowercase(); // Convert Action enum to lowercase string
+    if let (Some(fetched_language), Some(fetched_action)) = (&args.language, &args.action) {
+        let cleaned_language_str = clean_language_string(&fetched_language);
+        let cleaned_action_str = clean_action_string(&fetched_action);
 
-        // Check if the language is installed
-        let cleaned_language_str = language_str.replace("\"rust\"", "cargo").replace("\"", "");
-        let cleaned_action_str = action_str.replace("\"", "");
-        
         if !is_language_installed(&cleaned_language_str) {
             suggest_installation(&cleaned_language_str);
         }
-
         // Perform the action
         execute_language_action(&cleaned_language_str, &cleaned_action_str);
-    } else if args.language.is_none() && args.action.is_none() {
-        // Both language and action are empty Do Nothing
+    } else if args.language.is_none() {
+        // If action is present but language is not, try to dynamically identify the language using the current path
+        match identify_project_type(".") {
+            Ok(project_type) => {
+                println!("Identified project type: {}", project_type);
+                if let Some(fetched_action) = &args.action {
+                    let cleaned_language_str =
+                        project_type.replace("rust", "cargo").replace("\"", "");
+                    let cleaned_action_str = clean_action_string(fetched_action);
+
+                    if !is_language_installed(&cleaned_language_str) {
+                        suggest_installation(&cleaned_language_str);
+                    }
+                    // Perform the action
+                    execute_language_action(&cleaned_language_str, &cleaned_action_str);
+                }
+            }
+            Err(error) => eprintln!("Error identifying project type: {}", error),
+        }
     } else {
-        print_error_message("Error: You must provide both --language and --action. Use --help to see the help message.\n");
+        // Check if both language and action are empty before printing an error
+        if args.language.is_none() && args.action.is_none() {
+            // Do nothing when both are empty
+        } else {
+            print_error_message("Error: You must provide both --language and --action. Use --help to see the help message.\n");
+        }
     }
 
     // Check if the name is present and neither --copy nor --move are present
@@ -180,7 +203,7 @@ async fn main() {
     {
         print_error_message(
             "Error: You must provide either a name, a URL, use --search, or use --copy/--move. \
-            Additionally, provide --language and --action. Use --help to see the help message.\n"
+            Additionally, provide --language and --action. Use --help to see the help message.\n",
         );
     }
 }

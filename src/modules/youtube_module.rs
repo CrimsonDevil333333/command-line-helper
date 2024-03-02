@@ -1,7 +1,10 @@
 use rustube::Id;
 use rustube::VideoFetcher;
 
-pub async fn download_video(url: &str, download_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn download_video(
+    url: &str,
+    download_path: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Parse video ID from URL
     let id = Id::from_raw(url)?;
 
@@ -15,7 +18,11 @@ pub async fn download_video(url: &str, download_path: &str) -> Result<(), Box<dy
     let video = descrambler.descramble()?;
 
     // Download the best quality video to the specified path
-    video.best_quality().unwrap().download_to_dir(download_path).await?;
+    video
+        .best_quality()
+        .unwrap()
+        .download_to_dir(download_path)
+        .await?;
 
     println!("Download complete");
     Ok(())
