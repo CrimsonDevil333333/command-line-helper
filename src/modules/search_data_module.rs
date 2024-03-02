@@ -5,6 +5,11 @@ use std::path::PathBuf;
 pub fn search_data_in_files(data: &str, output_path: &PathBuf, root_level: usize, limit: usize) {
     let mut results = Vec::new();
     search_files_recursive(data, output_path, root_level, &mut results);
+    if results.is_empty() {
+        println!("No results found for your input '{}'", data.yellow().bold());
+        return;
+    }
+
     for (file_path, lines) in results {
         if limit == 0 {
             for (line_number, line) in lines {

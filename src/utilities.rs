@@ -1,3 +1,4 @@
+use log::info;
 use std::env;
 use std::io::{self, Write};
 use std::path::PathBuf;
@@ -6,16 +7,24 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 // Helper function to clean language string
 pub fn clean_language_string(language: &String) -> String {
-    format!("{:?}", language)
+    let cleaned_language = format!("{:?}", language)
         .to_lowercase()
         .replace("rust", "cargo")
         .replace("js", "npm")
-        .replace("\"", "")
+        .replace("\"", "");
+
+    info!("Cleaned language string: {}", cleaned_language);
+
+    cleaned_language
 }
 
 // Helper function to clean action string
 pub fn clean_action_string(action: &String) -> String {
-    format!("{:?}", action).to_lowercase().replace("\"", "")
+    let cleaned_action = format!("{:?}", action).to_lowercase().replace("\"", "");
+
+    info!("Cleaned action string: {}", cleaned_action);
+
+    cleaned_action
 }
 
 #[allow(dead_code)]
@@ -32,7 +41,11 @@ pub fn print_hyperlink(path: &std::path::Path) {
 }
 
 pub fn get_current_os() -> &'static str {
-    std::env::consts::OS
+    let os_info = std::env::consts::OS;
+
+    info!("Current OS: {}", os_info);
+
+    os_info
 }
 
 pub fn is_language_installed(language: &str) -> bool {
@@ -43,9 +56,12 @@ pub fn is_language_installed(language: &str) -> bool {
         .status();
 
     if let Ok(status) = status {
-        status.success()
+        let is_installed = status.success();
+        info!("Is {} installed: {}", language, is_installed);
+        is_installed
     } else {
-        print_error_message(&format!("Failed to execute command {}\n", language));
+        let error_message = format!("Failed to execute command {}", language);
+        print_error_message(&error_message);
         false
     }
 }
@@ -53,7 +69,8 @@ pub fn is_language_installed(language: &str) -> bool {
 pub fn suggest_installation(language: &str) {
     let os_info = get_current_os();
 
-    print_error_message(&format!("{} is not installed on {}.\n", language, os_info));
+    let error_message = format!("{} is not installed on {}.", language, os_info);
+    print_error_message(&error_message);
 
     // Add installation suggestions based on the OS
     match os_info {
@@ -79,7 +96,8 @@ pub fn validate_and_suggest_installation(language: &str) {
         println!("{} is already installed.", language);
     } else {
         let os_info = get_current_os();
-        print_error_message(&format!("{} is not installed on {}.\n", language, os_info));
+        let error_message = format!("{} is not installed on {}.", language, os_info);
+        print_error_message(&error_message);
 
         // Add installation suggestions based on the OS
         match os_info {
@@ -119,7 +137,11 @@ pub fn load_system_paths() -> Vec<PathBuf> {
     // Retrieve the system PATH
     if let Some(system_path) = env::var_os("PATH") {
         // Split the system PATH into individual paths
-        env::split_paths(&system_path).collect()
+        let paths: Vec<PathBuf> = env::split_paths(&system_path).collect();
+
+        info!("Loaded system paths: {:?}", paths);
+
+        paths
     } else {
         eprintln!("Failed to retrieve system PATH.");
         Vec::new()
@@ -184,7 +206,7 @@ mod tests {
         assert_eq!(is_language_installed("rustc"), true);
 
         // Test with a non-existent language
-        assert_eq!(is_language_installed("npm"), true);
+        assert_eq!(is_language_installed("npm"), false);
     }
 
     #[test]

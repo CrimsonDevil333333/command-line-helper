@@ -4,7 +4,6 @@ mod modules;
 mod utilities;
 
 use clap::Parser;
-use log::info;
 use std::path::PathBuf;
 
 use modules::language_identifier_module::identify_project_type;
@@ -108,8 +107,6 @@ async fn main() {
     let args = Args::parse();
 
     setup_logging(args.verbose, args.log_out);
-
-    info!("This is the starting of a new run!!!");
 
     // No need "execute_language_action" will handle validation !
     // if let Err(err) = validate_language_action(&args.language, &args.action) {

@@ -1,4 +1,5 @@
 use crate::print_error_message;
+use log::warn;
 use std::io;
 use std::process::{exit, Command};
 
@@ -70,7 +71,10 @@ pub fn execute_language_action(language: &str, action: &str) {
                 ("npm", "build") => execute_command("npm", &["run", "build"]),
                 ("npm", "publish") => execute_command("npm", &["publish"]),
                 ("npm", "update") => execute_command("npm", &["update"]),
-                _ => println!("Unsupported action {} for language {}", action, language),
+                _ => {
+                    warn!("Unsupported action {} for language {}", action, language);
+                    println!("Unsupported action {} for language {}", action, language);
+                }
             }
         } else {
             println!(
@@ -79,6 +83,7 @@ pub fn execute_language_action(language: &str, action: &str) {
             );
         }
     } else {
+        warn!("Unsupported language: {}", language);
         println!("Unsupported language: {}", language);
     }
 }
@@ -138,18 +143,21 @@ mod tests {
 
     #[test]
     fn test_execute_valid_command() {
-        let result = execute_language_action("cargo", "runs");
+        // Test with a valid language and action
+        let result = execute_language_action("cargo", "run");
         assert_eq!(result, ());
     }
 
     #[test]
     fn test_execute_invalid_action() {
+        // Test with a valid language but an invalid action
         let result = execute_language_action("python", "invalid_action");
         assert_eq!(result, ());
     }
 
     #[test]
     fn test_execute_invalid_language() {
+        // Test with an invalid language
         let result = execute_language_action("invalid_language", "run");
         assert_eq!(result, ());
     }

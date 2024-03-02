@@ -1,4 +1,4 @@
-use log::LevelFilter;
+use log::{info, LevelFilter};
 use log4rs;
 
 use crate::print_error_message;
@@ -86,5 +86,7 @@ pub fn setup_logging(verbose: bool, out: bool) {
 
     if let Err(e) = log4rs::init_config(config) {
         print_error_message(&format!("Error initializing logging: {}\n", e));
+    } else {
+        info!("Logging initialized successfully.");
     }
 }
