@@ -45,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v4.3.1
         with:
           name: release-artifacts
-          path: target/release/
+          path: target/release/command_line_helper*
 
   release:
     runs-on: windows-latest
