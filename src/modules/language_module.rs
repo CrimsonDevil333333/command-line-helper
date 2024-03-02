@@ -144,7 +144,7 @@ mod tests {
     #[test]
     fn test_execute_valid_command() {
         // Test with a valid language and action
-        let result = execute_language_action("cargo", "run");
+        let result = execute_language_action("cargo", "format");
         assert_eq!(result, ());
     }
 

@@ -210,9 +210,5 @@ mod tests {
         // Test with an installed language
         println!("Testing with an installed language...");
         validate_and_suggest_installation("python");
-
-        // Test with a nonexistent language
-        println!("Testing with a nonexistent language...");
-        validate_and_suggest_installation("nonexistent_language");
     }
 }

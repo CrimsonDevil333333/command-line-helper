@@ -60,7 +60,6 @@ struct Args {
     #[clap(short = 'g', long)]
     goto: Option<PathBuf>,
 
-
     /// Specify the depth of search roots.
     #[clap(long = "root-level", default_value = "3")]
     root_level: usize,
