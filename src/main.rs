@@ -11,63 +11,72 @@ use modules::language_identifier_module::identify_project_type;
 use modules::language_module::execute_language_action;
 use modules::logging_module::setup_logging;
 use modules::os_modules::{copy_file, move_file, search_files};
+use modules::search_data_module::search_data_in_files;
 use modules::youtube_module::download_video;
 use utilities::{
     clean_action_string, clean_language_string, is_language_installed, print_colored_path,
     print_error_message, suggest_installation,
 };
 
-
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Args {
-    /// Name of the person to greet
+    /// Specifies the name to be used in operations like --copy and --move.
     #[clap(short = 'n', long)]
     name: Option<String>,
 
-    /// Youtube URL
+    /// Downloads YouTube videos or shots from the provided URL.
     #[clap(short = 'u', long)]
     url: Option<String>,
 
-    /// Number of times to greet
-    #[clap(short = 'c', long, default_value = "1")]
-    count: u8,
-
-    /// Output path for downloaded video
+    /// Sets the output path for downloaded videos or destination for --copy/--move operations.
     #[clap(short = 'p', long, default_value = ".")]
     output_path: std::path::PathBuf,
 
-    /// Verbose mode
+    /// Enables verbose mode, providing detailed logs during execution.
     #[clap(short = 'v', long)]
     verbose: bool,
 
-    /// Logs output in a file for debug
+    /// Outputs trace logs to a file for debugging purposes.
     #[clap(short = 'o', long = "logs-out")]
     log_out: bool,
 
-    /// Search for files in the provided output path
+    /// Searches for files in the specified output path using the provided search pattern.
     #[clap(short = 's', long)]
     search: Option<String>,
 
-    /// Limit the number of search results
+    /// Limits the number of search results when using the --search/--data-search operation.
     #[clap(short = 'l', long, default_value = "0")]
     limit: usize,
 
-    /// Copy files to the output path
+    /// Copies files to the specified output path.
     #[clap(long = "copy")]
     copy: Option<PathBuf>,
 
-    /// Move files to the output path
+    /// Moves files to the specified output path.
     #[clap(long = "move")]
     move_files: Option<PathBuf>,
 
-    /// Language to perform the action on
+    /// Specifies the programming language for targeted actions (enhances performance).
     #[clap(short = 'L', long)]
     language: Option<String>,
 
-    /// Action to perform
+    /// Specifies the action to perform on the project (e.g., run, build, test).
+    /// Use --goto along with this option for complex project structures.
     #[clap(short = 'r', long)]
     action: Option<String>,
+
+    /// Navigates to the specified path from within the tool.
+    #[clap(short = 'g', long)]
+    goto: Option<PathBuf>,
+
+    /// Search for specific data in files.
+    #[clap(short = 'S', long = "data-search")]
+    data_search: Option<String>,
+
+    /// Specify the depth of search roots.
+    #[clap(long = "root-level", default_value = "3")]
+    root_level: usize,
 }
 
 #[allow(dead_code)]
@@ -108,6 +117,36 @@ async fn main() {
     //     return;
     // }
 
+    // Check if the user provided the --goto option
+    if let Some(goto_path) = &args.goto {
+        // Navigate to the specified path
+        if goto_path.is_dir() {
+            // The path is a directory
+            std::env::set_current_dir(goto_path).unwrap_or_else(|err| {
+                eprintln!("Error navigating to {}: {}", goto_path.display(), err);
+            });
+        } else {
+            // The path is a file
+            if let Some(parent_dir) = goto_path.parent() {
+                std::env::set_current_dir(parent_dir).unwrap_or_else(|err| {
+                    eprintln!("Error navigating to {}: {}", parent_dir.display(), err);
+                });
+            } else {
+                eprintln!("Error getting parent directory of {}", goto_path.display());
+            }
+        }
+        println!(
+            "Navigated to: {}",
+            std::env::current_dir().unwrap().display()
+        );
+    }
+
+    // Check if the data_search option is present
+    if let Some(search_data) = &args.data_search {
+        // Search for data in files
+        search_data_in_files(search_data, &args.output_path, args.root_level, args.limit);
+    }
+
     if let (Some(fetched_language), Some(fetched_action)) = (&args.language, &args.action) {
         let cleaned_language_str = clean_language_string(&fetched_language);
         let cleaned_action_str = clean_action_string(&fetched_action);
@@ -117,7 +156,7 @@ async fn main() {
         }
         // Perform the action
         execute_language_action(&cleaned_language_str, &cleaned_action_str);
-    } else if args.language.is_none() {
+    } else if args.language.is_none() && !args.action.is_none() {
         // If action is present but language is not, try to dynamically identify the language using the current path
         match identify_project_type(".") {
             Ok(project_type) => {
@@ -149,9 +188,7 @@ async fn main() {
     if let Some(name) = &args.name {
         if args.copy.is_none() && args.move_files.is_none() {
             // Print greetings
-            for _ in 0..args.count {
-                println!("Hello {}!", name);
-            }
+            println!("Hello {}!", name);
         }
     }
 
@@ -186,6 +223,8 @@ async fn main() {
         && args.move_files.is_none()
         && args.language.is_none()
         && args.action.is_none()
+        && args.goto.is_none()
+        && args.data_search.is_none()
     {
         print_error_message(
             "Error: You must provide either a name, a URL, use --search, or use --copy/--move. \
