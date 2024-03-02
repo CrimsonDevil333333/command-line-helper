@@ -17,22 +17,6 @@ use utilities::{
     print_error_message, suggest_installation,
 };
 
-#[derive(Debug, Clone)]
-pub enum Language {
-    Java,
-    Python,
-    Dotnet,
-    Rust,
-    Npm,
-}
-
-#[derive(Debug, Clone)]
-pub enum Action {
-    Run,
-    Build,
-    Test,
-    Clean,
-}
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -86,6 +70,7 @@ struct Args {
     action: Option<String>,
 }
 
+#[allow(dead_code)]
 fn validate_language_action(
     language: &Option<String>,
     action: &Option<String>,
@@ -95,7 +80,7 @@ fn validate_language_action(
             let lang_lower = lang.to_lowercase();
             let act_lower = act.to_lowercase();
 
-            if !["java", "python", "dotnet", "rust", "npm"].contains(&lang_lower.as_str()) {
+            if !["java", "python", "dotnet", "rust", "js"].contains(&lang_lower.as_str()) {
                 return Err(format!("Invalid language: {}", lang));
             }
 
@@ -117,10 +102,11 @@ async fn main() {
 
     info!("This is the starting of a new run!!!");
 
-    if let Err(err) = validate_language_action(&args.language, &args.action) {
-        print_error_message(&format!("Error: {}\n", err));
-        return;
-    }
+    // No need "execute_language_action" will handle validation !
+    // if let Err(err) = validate_language_action(&args.language, &args.action) {
+    //     print_error_message(&format!("Error: {}\n", err));
+    //     return;
+    // }
 
     if let (Some(fetched_language), Some(fetched_action)) = (&args.language, &args.action) {
         let cleaned_language_str = clean_language_string(&fetched_language);

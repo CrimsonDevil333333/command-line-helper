@@ -27,35 +27,39 @@ fn contains_project_files(path: &str, project_type: &str) -> bool {
 
 fn is_rust_project(path: &str) -> bool {
     // Check for common Rust project files or folders
-    file_exists(path, "Cargo.toml") || directory_exists(path, "src")
+    file_exists(path, "Cargo.toml")
 }
 
 fn is_java_project(path: &str) -> bool {
     // Check for common Java project files or folders
-    file_exists(path, "pom.xml") || directory_exists(path, "src")
+    file_exists(path, "pom.xml")
+        || file_exists(path, "build.gradle")
+        || file_exists(path, "build.gradle.kts")
 }
 
 fn is_python_project(path: &str) -> bool {
     // Check for common Python project files or folders
-    file_exists(path, "requirements.txt") || directory_exists(path, "src")
+    file_exists(path, "requirements.txt")
+        || file_exists(path, "main.py")
+        || file_exists(path, "config.py")
 }
 
 fn is_js_project(path: &str) -> bool {
     // Check for common JavaScript project files or folders
-    file_exists(path, "package.json") || directory_exists(path, "src")
+    file_exists(path, "package.json")
 }
 
 fn is_dotnet_project(path: &str) -> bool {
     // Check for common .NET project files or folders
-    file_exists(path, "*.csproj") || directory_exists(path, "src")
+    file_exists(path, "*.csproj") || file_exists(path, "*.sln")
 }
 
 fn file_exists(path: &str, file_name: &str) -> bool {
     fs::metadata(format!("{}/{}", path, file_name)).is_ok()
 }
 
-fn directory_exists(path: &str, dir_name: &str) -> bool {
-    fs::read_dir(path)
-        .map(|mut entries| entries.any(|entry| entry.unwrap().file_name() == dir_name))
-        .unwrap_or(false)
-}
+// fn directory_exists(path: &str, dir_name: &str) -> bool {
+//     fs::read_dir(path)
+//         .map(|mut entries| entries.any(|entry| entry.unwrap().file_name() == dir_name))
+//         .unwrap_or(false)
+// }

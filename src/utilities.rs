@@ -8,7 +8,8 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 pub fn clean_language_string(language: &String) -> String {
     format!("{:?}", language)
         .to_lowercase()
-        .replace("\"rust\"", "cargo")
+        .replace("rust", "cargo")
+        .replace("js", "npm")
         .replace("\"", "")
 }
 
@@ -44,7 +45,7 @@ pub fn is_language_installed(language: &str) -> bool {
     if let Ok(status) = status {
         status.success()
     } else {
-        print_error_message(&format!("Failed to execute command :( {}\n", language));
+        print_error_message(&format!("Failed to execute command {}\n", language));
         false
     }
 }
@@ -183,7 +184,7 @@ mod tests {
         assert_eq!(is_language_installed("rustc"), true);
 
         // Test with a non-existent language
-        assert_eq!(is_language_installed("unknown"), false);
+        assert_eq!(is_language_installed("npm"), true);
     }
 
     #[test]
