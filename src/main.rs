@@ -29,24 +29,41 @@ struct Args {
     url: Option<String>,
 
     /// Sets the output path for downloaded videos or destination for --copy/--move operations.
-    #[clap(short = 'p', long, default_value = ".")]
+    #[clap(short = 'o', long, default_value = ".")]
     output_path: std::path::PathBuf,
+
+    /// Outputs trace logs to a file for debugging purposes.
+    #[clap(short = 'O', long = "logs-out")]
+    log_out: bool,
 
     /// Enables verbose mode, providing detailed logs during execution.
     #[clap(short = 'v', long)]
     verbose: bool,
 
-    /// Outputs trace logs to a file for debugging purposes.
-    #[clap(short = 'o', long = "logs-out")]
-    log_out: bool,
-
     /// Searches for files in the specified output path using the provided search pattern.
     #[clap(short = 's', long)]
     search: Option<String>,
 
+    /// Search for specific data in files.
+    #[clap(short = 'S', long = "data-search")]
+    data_search: Option<String>,
+
     /// Limits the number of search results when using the --search/--data-search operation.
     #[clap(short = 'l', long, default_value = "0")]
     limit: usize,
+
+    /// Specifies the programming language for targeted actions (enhances performance).
+    #[clap(short = 'L', long)]
+    language: Option<String>,
+
+    /// Navigates to the specified path from within the tool.
+    #[clap(short = 'g', long)]
+    goto: Option<PathBuf>,
+
+
+    /// Specify the depth of search roots.
+    #[clap(long = "root-level", default_value = "3")]
+    root_level: usize,
 
     /// Copies files to the specified output path.
     #[clap(long = "copy")]
@@ -56,26 +73,10 @@ struct Args {
     #[clap(long = "move")]
     move_files: Option<PathBuf>,
 
-    /// Specifies the programming language for targeted actions (enhances performance).
-    #[clap(short = 'L', long)]
-    language: Option<String>,
-
     /// Specifies the action to perform on the project (e.g., run, build, test).
     /// Use --goto along with this option for complex project structures.
-    #[clap(short = 'r', long)]
+    #[clap(short = 'a', long)]
     action: Option<String>,
-
-    /// Navigates to the specified path from within the tool.
-    #[clap(short = 'g', long)]
-    goto: Option<PathBuf>,
-
-    /// Search for specific data in files.
-    #[clap(short = 'S', long = "data-search")]
-    data_search: Option<String>,
-
-    /// Specify the depth of search roots.
-    #[clap(long = "root-level", default_value = "3")]
-    root_level: usize,
 }
 
 #[allow(dead_code)]
