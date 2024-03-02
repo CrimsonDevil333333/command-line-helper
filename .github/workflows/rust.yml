@@ -11,7 +11,6 @@ env:
 
 jobs:
   build:
-
     runs-on: windows-latest  # Change to Windows environment
     strategy:
       matrix:
@@ -33,7 +32,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
-
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
 
       - name: Build
@@ -51,6 +49,5 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files:
-            - target/release/command_line_helper.exe
+          files: target/release/command_line_helper.exe
           repo_token: ${{ secrets.REPO_TOKEN }}
