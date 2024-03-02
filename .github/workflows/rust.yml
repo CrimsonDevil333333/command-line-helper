@@ -97,7 +97,7 @@ jobs:
       - name: Generate release tag
         id: tag
         run: |
-          echo "name=release_tag::UserBuild_$(date +"%Y.%m.%d_%H-%M")">> "$GITHUB_OUTPUT"
+          echo "release_tag=UserBuild_$(date +"%Y.%m.%d_%H-%M")">> "$GITHUB_OUTPUT"
 
       - name: GH Release
         uses: softprops/action-gh-release@v1
