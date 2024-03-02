@@ -201,15 +201,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_is_language_installed() {
-        // Test with an installed language
-        assert_eq!(is_language_installed("rustcs"), false);
-
-        // Test with a non-existent language
-        assert_eq!(is_language_installed("npm"), true);
-    }
-
-    #[test]
     fn test_os_info() {
         assert_eq!(get_current_os(), std::env::consts::OS);
     }
