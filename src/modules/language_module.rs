@@ -19,8 +19,19 @@ pub fn execute_language_action(language: &str, action: &str) {
                 ("java", "test") => {
                     execute_command("junit", &[&input("Enter Java test file path: ")])
                 }
-                ("java", "install") => execute_command("mvn", &["install"]),
-                ("java", "clean") => execute_command("mvn", &["clean"]),
+
+                // Maven commands
+                ("mvn", "compile") => execute_command("mvn", &["compile"]),
+                ("mvn", "test") => execute_command("mvn", &["test"]),
+                ("mvn", "package") => execute_command("mvn", &["package"]),
+                ("mvn", "install") => execute_command("mvn", &["install"]),
+                ("mvn", "deploy") => execute_command("mvn", &["deploy"]),
+                ("mvn", "clean") => execute_command("mvn", &["clean"]),
+
+                // Gradle commands
+                ("gradle", "build") => execute_command("gradle", &["build"]),
+                ("gradle", "test") => execute_command("gradle", &["test"]),
+                ("gradle", "clean") => execute_command("gradle", &["clean"]),
 
                 // Python commands
                 ("python", "run") => {
@@ -89,17 +100,36 @@ pub fn execute_language_action(language: &str, action: &str) {
 }
 
 fn execute_command(command: &str, args: &[&str]) {
-    let status = Command::new(command).args(args).status();
+    let mut cmd = command.to_owned();
+    if cfg!(windows) {
+        // On Windows, check if the command has a `.cmd` suffix
+        if !cmd.ends_with(".cmd") {
+            // Check if the command with `.cmd` suffix exists
+            let cmd_with_suffix = format!("{}.cmd", command);
+            if which::which(&cmd_with_suffix).is_ok() {
+                // Use the command with `.cmd` suffix if found
+                cmd = cmd_with_suffix;
+            }
+        }
+    }
+
+    println!("Executing command: {} {:?}", cmd, args); // Print the command being executed
+
+    let status = Command::new(&cmd).args(args).status();
 
     match status {
         Ok(exit_status) => {
             if !exit_status.success() {
-                let error_message = format!("Error executing command: {} {:?}", command, args);
+                let error_message = format!("Error executing command: {} {:?}", cmd, args);
                 print_error_message(&error_message);
                 exit(exit_status.code().unwrap_or(1));
+            } else {
+                println!("Command executed successfully.");
             }
         }
         Err(err) => {
+            let error_message = format!("Error executing command: {} {:?}", cmd, args);
+            print_error_message(&error_message);
             let error_message = format!("Error executing command: {}", err);
             print_error_message(&error_message);
             exit(1);
@@ -110,7 +140,12 @@ fn execute_command(command: &str, args: &[&str]) {
 fn map_language_actions() -> std::collections::HashMap<&'static str, Vec<&'static str>> {
     let mut map = std::collections::HashMap::new();
 
-    map.insert("java", vec!["run", "build", "test", "install", "clean"]);
+    map.insert("java", vec!["run", "build", "test"]);
+    map.insert("gradle", vec!["build", "test", "clean"]);
+    map.insert(
+        "mvn",
+        vec!["compile", "test", "package", "install", "deploy", "clean"],
+    );
     map.insert("python", vec!["run", "test", "install", "remove", "clean"]);
     map.insert("dotnet", vec!["run", "build", "clean", "install", "remove"]);
     map.insert(

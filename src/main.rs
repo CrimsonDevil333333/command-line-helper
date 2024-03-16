@@ -159,10 +159,11 @@ async fn main() {
             Ok(project_type) => {
                 println!("Identified project type: {}", project_type);
                 if let Some(fetched_action) = &args.action {
-                    let cleaned_language_str =
-                        project_type.replace("rust", "cargo").replace("\"", "");
+                    let cleaned_language_str = project_type
+                        .replace("rust", "cargo")
+                        .replace("\"", "")
+                        .replace("js", "npm");
                     let cleaned_action_str = clean_action_string(fetched_action);
-
                     if !is_language_installed(&cleaned_language_str) {
                         suggest_installation(&cleaned_language_str);
                     }

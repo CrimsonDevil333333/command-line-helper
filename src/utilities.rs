@@ -49,11 +49,23 @@ pub fn get_current_os() -> &'static str {
 }
 
 pub fn is_language_installed(language: &str) -> bool {
-    let status = Command::new(language)
-        .arg("--version")
-        .stdout(Stdio::null()) // Redirect standard output to null
-        .stderr(Stdio::null()) // Redirect standard error to null
-        .status();
+    let status = if cfg!(windows) && language == "mvn" || language == "npm" {
+        // On Windows, check if the command has a `.cmd` suffix for specific commands
+        let cmd = format!("{}.cmd", language);
+        if which::which(&cmd).is_ok() {
+            // Use the command with `.cmd` suffix if found
+            Command::new(cmd)
+        } else {
+            // Fall back to the original command if `.cmd` version not found
+            Command::new(language)
+        }
+    } else {
+        Command::new(language)
+    }
+    .arg("--version")
+    .stdout(Stdio::null()) // Redirect standard output to null
+    .stderr(Stdio::null()) // Redirect standard error to null
+    .status();
 
     if let Ok(status) = status {
         let is_installed = status.success();
@@ -69,7 +81,7 @@ pub fn is_language_installed(language: &str) -> bool {
 pub fn suggest_installation(language: &str) {
     let os_info = get_current_os();
 
-    let error_message = format!("{} is not installed on {}.", language, os_info);
+    let error_message = format!("\n{} is not installed on {}.\n", language, os_info);
     print_error_message(&error_message);
 
     // Add installation suggestions based on the OS
@@ -107,7 +119,7 @@ pub fn validate_and_suggest_installation(language: &str) {
             ),
             "macos" => println!("Consider using Homebrew to install {}.", language),
             "windows" => println!(
-                "Consider downloading {} from the official website.",
+                "\nConsider downloading {} from the official website.",
                 language
             ),
             _ => println!(
