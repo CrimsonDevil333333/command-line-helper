@@ -60,9 +60,10 @@ cd command_line_helper
 
 4. Build the Project:
 
-Build the project using Cargo:
+Update and Build the project using Cargo:
 
 ```bash
+cargo update
 cargo build --release
 ```
 
