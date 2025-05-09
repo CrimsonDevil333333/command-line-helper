@@ -84,18 +84,32 @@ jobs:
           path: target/release/command_line_helper
 
   sonarqube:
-    name: SonarQube
+    name: SonarQube Analysis
     runs-on: ubuntu-latest
     needs: [build-linux]
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # full history required for Sonar
+          fetch-depth: 0  # required for full analysis context
 
-      - name: Install Rust (for metadata analysis if needed)
+      - name: Install Rust
         run: rustup update stable
 
-      - name: SonarQube Scan
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Generate test coverage report
+        run: |
+          mkdir -p coverage
+          cargo tarpaulin --out Xml --output-dir coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarpaulin-coverage-report
+          path: coverage/tarpaulin-report.xml
+
+      - name: Run SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -122,7 +136,7 @@ jobs:
       - name: Generate release tag
         id: tag
         run: |
-          echo "release_tag=UserBuild_$(date +"%Y.%m.%d_%H-%M")">> "$GITHUB_OUTPUT"
+          echo "release_tag=UserBuild_$(date +"%Y.%m.%d_%H-%M")" >> "$GITHUB_OUTPUT"
 
       - name: GH Release
         uses: softprops/action-gh-release@v1
