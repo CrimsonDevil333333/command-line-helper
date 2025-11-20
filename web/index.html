@@ -462,7 +462,7 @@
                     ]
                 },
                 {
-                    id: 'hash-verify', name: 'Verify Hash', desc: 'Check file integrity', args: [
+                    id: 'hash-file', name: 'Verify Hash', desc: 'Check file integrity', args: [
                         { name: 'path', label: 'File Path', required: true, isMainValue: true },
                         { name: 'hash', label: 'Expected Hash', required: true, flag: '--hash-verify' }
                     ]
@@ -474,8 +474,8 @@
                 { id: 'base64-decode', name: 'Base64 Decode', desc: 'Decode from Base64', args: [{ name: 'text', label: 'Base64 String', required: true, isMainValue: true }] },
                 {
                     id: 'text-case', name: 'Change Case', desc: 'Convert text casing', args: [
-                        { name: 'text', label: 'Input Text', required: true, isMainValue: true },
-                        { name: 'case', label: 'Case Style', type: 'select', options: ['upper', 'lower', 'title', 'camel', 'snake', 'kebab'], flag: '--text-case' }
+                        { name: 'case', label: 'Case Style', type: 'select', options: ['upper', 'lower', 'title', 'camel', 'snake', 'kebab'], required: true, isMainValue: true },
+                        { name: 'text', label: 'Input Text', required: true, flag: '--text' }
                     ]
                 }
             ],
@@ -486,7 +486,7 @@
                 {
                     id: 'git-clone', name: 'Clone Repo', desc: 'Clone a repository', args: [
                         { name: 'url', label: 'Repo URL', required: true, isMainValue: true },
-                        { name: 'path', label: 'Destination Path', required: true, isMainValue: true }
+                        { name: 'path', label: 'Destination Path', required: true, flag: '--output-path' }
                     ]
                 },
                 { id: 'git-add', name: 'Add All', desc: 'Stage changes', args: [] },
@@ -496,13 +496,13 @@
                 {
                     id: 'zip-create', name: 'Create Zip', desc: 'Compress folder to zip', args: [
                         { name: 'source', label: 'Source Folder', required: true, isMainValue: true },
-                        { name: 'output', label: 'Output Zip', required: true, isMainValue: true }
+                        { name: 'output', label: 'Output Zip', required: true, flag: '--output-path' }
                     ]
                 },
                 {
                     id: 'zip-extract', name: 'Extract Zip', desc: 'Unzip archive', args: [
                         { name: 'archive', label: 'Zip File', required: true, isMainValue: true },
-                        { name: 'output', label: 'Destination', required: true, isMainValue: true }
+                        { name: 'output', label: 'Destination', required: true, flag: '--output-path' }
                     ]
                 }
             ],
