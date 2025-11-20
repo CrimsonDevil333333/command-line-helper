@@ -79,27 +79,8 @@ pub fn is_language_installed(language: &str) -> bool {
 }
 
 pub fn suggest_installation(language: &str) {
-    let os_info = get_current_os();
-
-    let error_message = format!("\n{} is not installed on {}.\n", language, os_info);
-    print_error_message(&error_message);
-
-    // Add installation suggestions based on the OS
-    match os_info {
-        "linux" => println!(
-            "Consider using your package manager to install {}.",
-            language
-        ),
-        "macos" => println!("Consider using Homebrew to install {}.", language),
-        "windows" => println!(
-            "Consider downloading {} from the official website.",
-            language
-        ),
-        _ => println!(
-            "Unable to provide installation suggestions for {} on {}.",
-            language, os_info
-        ),
-    }
+    // Use the enhanced installer from installer module
+    crate::installer::suggest_installation_enhanced(language);
 }
 
 #[allow(dead_code)]
@@ -107,26 +88,7 @@ pub fn validate_and_suggest_installation(language: &str) {
     if is_language_installed(language) {
         println!("{} is already installed.", language);
     } else {
-        let os_info = get_current_os();
-        let error_message = format!("{} is not installed on {}.", language, os_info);
-        print_error_message(&error_message);
-
-        // Add installation suggestions based on the OS
-        match os_info {
-            "linux" => println!(
-                "Consider using your package manager to install {}.",
-                language
-            ),
-            "macos" => println!("Consider using Homebrew to install {}.", language),
-            "windows" => println!(
-                "\nConsider downloading {} from the official website.",
-                language
-            ),
-            _ => println!(
-                "Unable to provide installation suggestions for {} on {}.",
-                language, os_info
-            ),
-        }
+        suggest_installation(language);
     }
 }
 

@@ -1,0 +1,268 @@
+    Checking command_line_helper v2.0.0 (D:\Projects\command-line-helper)
+error: argument never used
+  --> src\installer.rs:75:77
+   |
+75 |                     println!("    Ubuntu/Debian: sudo apt install python3", "  ".cyan());
+   |                              ---------------------------------------------  ^^^^^^^^^^^ argument never used
+   |                              |
+   |                              formatting specifier missing
+
+error: argument never used
+  --> src\installer.rs:76:70
+   |
+76 |                     println!("    Fedora: sudo dnf install python3", "  ".cyan());
+   |                              --------------------------------------  ^^^^^^^^^^^ argument never used
+   |                              |
+   |                              formatting specifier missing
+
+error: argument never used
+  --> src\installer.rs:77:65
+   |
+77 |                     println!("    Arch: sudo pacman -S python", "  ".cyan());
+   |                              ---------------------------------  ^^^^^^^^^^^ argument never used
+   |                              |
+   |                              formatting specifier missing
+
+error[E0425]: cannot find function `load_env_from_file` in module `env_module`
+   --> src\main.rs:477:21
+    |
+477 |         env_module::load_env_from_file(path);
+    |                     ^^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `load_env_file`
+    |
+   ::: src\modules\env_module.rs:37:1
+    |
+37  | pub fn load_env_file(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    | ----------------------------------------------------------------------------------- similarly named function `load_env_file` defined here
+
+error[E0425]: cannot find function `export_env_to_file` in module `env_module`
+   --> src\main.rs:482:21
+    |
+482 |         env_module::export_env_to_file(path, args.env_filter.as_deref());
+    |                     ^^^^^^^^^^^^^^^^^^ not found in `env_module`
+
+error[E0425]: cannot find function `calculate_all_hashes` in module `hash_module`
+   --> src\main.rs:488:22
+    |
+488 |         hash_module::calculate_all_hashes(path);
+    |                      ^^^^^^^^^^^^^^^^^^^^ not found in `hash_module`
+
+error[E0425]: cannot find function `verify_file_hash` in module `hash_module`
+   --> src\main.rs:500:26
+    |
+500 |             hash_module::verify_file_hash(path, expected, algo);
+    |                          ^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `verify_hash`
+    |
+   ::: src\modules\hash_module.rs:101:1
+    |
+101 | pub fn verify_hash(file_path: &PathBuf, expected_hash: &str, algorithm: HashAlgorithm) {
+    | -------------------------------------------------------------------------------------- similarly named function `verify_hash` defined here
+
+error[E0425]: cannot find function `calculate_file_hash` in module `hash_module`
+   --> src\main.rs:502:26
+    |
+502 |             hash_module::calculate_file_hash(path, algo);
+    |                          ^^^^^^^^^^^^^^^^^^^ not found in `hash_module`
+
+error[E0425]: cannot find function `calculate_string_hash` in module `hash_module`
+   --> src\main.rs:513:22
+    |
+513 |         hash_module::calculate_string_hash(text, algo);
+    |                      ^^^^^^^^^^^^^^^^^^^^^ not found in `hash_module`
+
+error[E0425]: cannot find function `convert_case` in module `text_module`
+   --> src\main.rs:540:26
+    |
+540 |             text_module::convert_case(text, case_type);
+    |                          ^^^^^^^^^^^^ not found in `text_module`
+
+error[E0425]: cannot find function `text_statistics` in module `text_module`
+   --> src\main.rs:548:22
+    |
+548 |         text_module::text_statistics(path);
+    |                      ^^^^^^^^^^^^^^^ help: a function with a similar name exists: `text_stats`
+    |
+   ::: src\modules\text_module.rs:132:1
+    |
+132 | pub fn text_stats(input: &str) {
+    | ------------------------------ similarly named function `text_stats` defined here
+
+error[E0425]: cannot find function `display_all_info` in module `system_module`
+   --> src\main.rs:554:24
+    |
+554 |         system_module::display_all_info();
+    |                        ^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `display_cpu_info`
+    |
+   ::: src\modules\system_module.rs:69:1
+    |
+69  | pub fn display_cpu_info() {
+    | ------------------------- similarly named function `display_cpu_info` defined here
+
+error[E0425]: cannot find function `list_tar_contents` in module `archive_module`
+   --> src\main.rs:649:25
+    |
+649 |         archive_module::list_tar_contents(archive);
+    |                         ^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `list_tar_gz_contents`
+    |
+   ::: src\modules\archive_module.rs:178:1
+    |
+178 | pub fn list_tar_gz_contents(archive_path: &Path) -> io::Result<()> {
+    | ------------------------------------------------------------------ similarly named function `list_tar_gz_contents` defined here
+
+error[E0425]: cannot find function `query_json` in module `format_module`
+   --> src\main.rs:691:28
+    |
+691 |             format_module::query_json(json, path);
+    |                            ^^^^^^^^^^ help: a function with a similar name exists: `json_query`
+    |
+   ::: src\modules\format_module.rs:98:1
+    |
+98  | pub fn json_query(input: &str, path: &str) {
+    | ------------------------------------------ similarly named function `json_query` defined here
+
+error[E0425]: cannot find function `http_get_request` in module `network_module`
+   --> src\main.rs:716:25
+    |
+716 |         network_module::http_get_request(url);
+    |                         ^^^^^^^^^^^^^^^^ not found in `network_module`
+
+error[E0425]: cannot find function `http_post_request` in module `network_module`
+   --> src\main.rs:722:25
+    |
+722 |         network_module::http_post_request(url, body);
+    |                         ^^^^^^^^^^^^^^^^^ not found in `network_module`
+
+warning: unused import: `Select`
+ --> src\installer.rs:2:26
+  |
+2 | use dialoguer::{Confirm, Select};
+  |                          ^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `PathBuf`
+ --> src\modules\archive_module.rs:7:23
+  |
+7 | use std::path::{Path, PathBuf};
+  |                       ^^^^^^^
+
+warning: unused import: `SystemTime`
+   --> src\modules\git_module.rs:236:31
+    |
+236 |     use std::time::{Duration, SystemTime, UNIX_EPOCH};
+    |                               ^^^^^^^^^^
+
+warning: unused imports: `IntoResponse` and `Query`
+ --> src\modules\server_module.rs:2:15
+  |
+2 |     extract::{Query, State},
+  |               ^^^^^
+3 |     http::StatusCode,
+4 |     response::{Html, IntoResponse, Json},
+  |                      ^^^^^^^^^^^^
+
+warning: unused import: `tower_http::services::ServeDir`
+  --> src\modules\server_module.rs:13:5
+   |
+13 | use tower_http::services::ServeDir;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `e`
+   --> src\modules\server_module.rs:157:16
+    |
+157 |     if let Err(e) = config.save() {
+    |                ^ help: if this is intentional, prefix it with an underscore: `_e`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+   --> src\main.rs:472:9
+    |
+472 |         env_module::set_env_var(value);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^------- argument #2 of type `&str` is missing
+    |
+note: function defined here
+   --> src\modules\env_module.rs:112:8
+    |
+112 | pub fn set_env_var(key: &str, value: &str) {
+    |        ^^^^^^^^^^^            -----------
+help: provide the argument
+    |
+472 -         env_module::set_env_var(value);
+472 +         env_module::set_env_var(value, /* &str */);
+    |
+
+error[E0599]: no function or associated item named `load_from_file` found for struct `config::Config` in the current scope
+   --> src\main.rs:741:31
+    |
+741 |         match config::Config::load_from_file(path) {
+    |                               ^^^^^^^^^^^^^^ function or associated item not found in `Config`
+    |
+   ::: src\config.rs:7:1
+    |
+7   | pub struct Config {
+    | ----------------- function or associated item `load_from_file` not found for this struct
+    |
+note: if you're trying to build a new `config::Config`, consider using `config::Config::load` which returns `Result<config::Config, Box<(dyn StdError + 'static)>>`
+   --> src\config.rs:52:5
+    |
+52  |     pub fn load() -> Result<Self, Box<dyn std::error::Error>> {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Digest`
+ --> src\modules\hash_module.rs:3:12
+  |
+3 | use sha2::{Digest, Sha256, Sha512};
+  |            ^^^^^^
+
+warning: variable does not need to be mutable
+   --> src\modules\git_module.rs:206:24
+    |
+206 |                     Ok(mut commit) => {
+    |                        ----^^^^^^
+    |                        |
+    |                        help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+error[E0506]: cannot assign to `commit` because it is borrowed
+   --> src\modules\git_module.rs:220:51
+    |
+211 |                             let author = commit.author();
+    |                                          ------ `commit` is borrowed here
+...
+220 |                                     Ok(parent) => commit = parent,
+    |                                                   ^^^^^^ `commit` is assigned to here but it was already borrowed
+...
+224 |                         }
+    |                         - borrow might be used here, when `author` is dropped and runs the `Drop` code for type `Signature`
+
+error[E0382]: borrow of moved value: `algo`
+   --> src\modules\hash_module.rs:147:56
+    |
+138 |     for algo in [
+    |         ---- move occurs because `algo` has type `HashAlgorithm`, which does not implement the `Copy` trait
+...
+143 |         match hash_file(file_path, algo) {
+    |                                    ---- value moved here
+...
+147 |                     format!("{}:", HashAlgorithm::name(&algo)).cyan().bold(),
+    |                                                        ^^^^^ value borrowed here after move
+    |
+note: consider changing this parameter type in function `hash_file` to borrow instead if owning the value isn't necessary
+   --> src\modules\hash_module.rs:34:50
+    |
+34  | pub fn hash_file(file_path: &PathBuf, algorithm: HashAlgorithm) -> Result<String, io::Error> {
+    |        --------- in this function                ^^^^^^^^^^^^^ this parameter takes ownership of the value
+note: if `HashAlgorithm` implemented `Clone`, you could clone the value
+   --> src\modules\hash_module.rs:8:1
+    |
+8   | pub enum HashAlgorithm {
+    | ^^^^^^^^^^^^^^^^^^^^^^ consider implementing `Clone` for this type
+...
+143 |         match hash_file(file_path, algo) {
+    |                                    ---- you could clone this value
+
+Some errors have detailed explanations: E0061, E0382, E0425, E0506, E0599.
+For more information about an error, try `rustc --explain E0061`.
+warning: `command_line_helper` (bin "command_line_helper") generated 8 warnings
+error: could not compile `command_line_helper` (bin "command_line_helper") due to 20 previous errors; 8 warnings emitted

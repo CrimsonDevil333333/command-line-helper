@@ -1,94 +1,78 @@
-# Command Line Helper
+# Command Line Helper v2.0
 
-A command-line utility for performing various actions, such as language-specific tasks, file operations, and more.
+<div align="center">
 
-## Usage
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)
 
-```bash
-command_line_helper [OPTIONS]
-```
+**A powerful, feature-rich command-line utility with web dashboard for developers**
 
-## Examples
+[Features](#features) • [Installation](#installation) • [Usage](#usage) • [Web Dashboard](#web-dashboard) • [Documentation](#documentation)
 
-Perform language-specific action:
+</div>
 
-```bash
-command_line_helper --language rust --action build
-```
+---
 
-Copy files to a specific output path:
+## 🚀 Features
 
-```bash
-command_line_helper --copy /path/to/source --name my_files
-```
+### Core Capabilities
+- **Language-Specific Operations**: Build, run, and test projects for Rust, Python, Java, .NET, Node.js, and more
+- **File Operations**: Advanced file search, copy, move with pattern matching
+- **YouTube Downloads**: Download videos with progress indicators and quality selection
+- **Web Dashboard**: Modern, responsive UI for managing all features via browser
 
-Download a YouTube video:
+### New in v2.0
 
-```bash
-command_line_helper --url <YOUTUBE_VIDEO_URL>
-```
+#### 🌍 Environment Management
+- List, get, and set environment variables
+- Load from `.env` files
+- Export variables to files with filtering
 
-Search for files:
+#### 🔐 File Hashing & Verification
+- Calculate MD5, SHA256, SHA512 hashes
+- Verify file integrity
+- Batch hash calculation
 
-```bash
-command_line_helper --search "*.txt" --limit 10
-```
+#### 📝 Text Processing
+- Base64 and URL encoding/decoding
+- Case conversion (upper, lower, title, camel, snake, kebab)
+- Text statistics and find/replace
 
-## Local Setup
+#### 💻 System Information
+- CPU, memory, disk, and network stats
+- Real-time system monitoring
+- Cross-platform compatibility
 
-To run Command Line Helper locally, follow these steps:
+#### 📦 Git Operations
+- Status, clone, branch management
+- Commit and push operations
+- View commit history
 
-1. Install Rust:
+#### 📁 Archive Management
+- Create and extract ZIP and TAR.GZ archives
+- List archive contents
+- Compression support
 
-Ensure that you have Rust and Cargo (Rust's package manager) installed on your system. If not, you can install them by following the official instructions here.
+#### 🎨 Data Formatting
+- JSON/YAML validation and formatting
+- Format conversion (JSON ↔ YAML)
+- JSON path queries
 
-2. Clone the Repository:
+#### 🌐 Network Utilities
+- Port checking and host pinging
+- HTTP GET/POST requests
+- DNS lookups
+- Public IP detection
 
-Clone this repository to your local machine using the following command:
+#### 🛠️ Smart Tool Installer
+- Automatic detection of missing tools
+- OS-specific download links
+- One-click installation via package managers
+- Supports Windows (winget/choco), macOS (brew), Linux (apt/dnf/pacman)
 
-```bash
-git clone https://github.com/your-username/command_line_helper.git
-```
+---
 
-3. Navigate to the Project Directory:
+[⬆ Back to Top](#command-line-helper-v20)
 
- Change your working directory to the project folder:
-
-```bash
-cd command_line_helper
-```
-
-4. Build the Project:
-
-Update and Build the project using Cargo:
-
-```bash
-cargo update
-cargo build --release
-```
-
-This will create the executable in the target/release/ directory.
-
-5. Run the Command Line Helper:
-
-Run the command-line helper using:
-
-```bash
-./target/release/command_line_helper [OPTIONS]
-```
-
-## Notes
-
-Here are some situations and how the tool handles them:
-
-* **Omitting `--language` flag but providing `--action` flag:** The tool attempts to infer the language based on the current directory.
-* **Both `--language` and `--action` flags missing:** This results in an error, and the user is prompted to provide both flags.
-* For detailed information and additional options, use the --help flag:
-
-```bash
-command_line_helper --help
-```
-
-## Contributing
-
-This project welcomes contributions! We encourage you to submit pull requests if you find any issues or have suggestions for improvements.
+</div>
