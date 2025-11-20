@@ -17,18 +17,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
         rust: [stable]
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install OpenSSL (macOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew install openssl@3
-          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -84,20 +77,9 @@ jobs:
             target: x86_64-pc-windows-msvc
             artifact_name: command_line_helper.exe
             asset_name: command-line-helper-windows-x86_64.exe
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact_name: command_line_helper
-            asset_name: command-line-helper-macos-x86_64
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install OpenSSL (macOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew install openssl@3
-          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -108,8 +90,8 @@ jobs:
       - name: Build release
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Strip binary (Linux/macOS)
-        if: matrix.os != 'windows-latest'
+      - name: Strip binary (Linux)
+        if: matrix.os == 'ubuntu-latest'
         run: strip target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
 
       - name: Upload artifact
@@ -132,8 +114,8 @@ jobs:
         run: |
           Compress-Archive -Path release/* -DestinationPath ${{ matrix.asset_name }}.zip
 
-      - name: Create TAR.GZ (Linux/macOS)
-        if: github.event_name == 'release' && matrix.os != 'windows-latest'
+      - name: Create TAR.GZ (Linux)
+        if: github.event_name == 'release' && matrix.os == 'ubuntu-latest'
         run: |
           tar -czf ${{ matrix.asset_name }}.tar.gz -C release .
 
@@ -145,8 +127,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload release asset (Linux/macOS)
-        if: github.event_name == 'release' && matrix.os != 'windows-latest'
+      - name: Upload release asset (Linux)
+        if: github.event_name == 'release' && matrix.os == 'ubuntu-latest'
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ matrix.asset_name }}.tar.gz
