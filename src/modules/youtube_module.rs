@@ -1,9 +1,8 @@
 use colored::Colorize;
-use indicatif::{ProgressBar, ProgressStyle};
-use log::error;
-use rustube::Id;
-use rustube::VideoFetcher;
+use std::path::Path;
+use std::process::{Command, Stdio};
 
+/// Downloads a YouTube video using yt-dlp
 pub async fn download_video(
     url: &str,
     download_path: &str,
@@ -12,125 +11,120 @@ pub async fn download_video(
     println!("{}", "YouTube Video Downloader".cyan().bold());
     println!("{}", "=".repeat(80).cyan());
 
-    // Parse video ID from URL
-    let id = match Id::from_raw(url) {
-        Ok(id) => {
-            println!("{} Parsed video ID: {}", "✓".green(), id.as_str().yellow());
-            id
-        }
-        Err(err) => {
-            error!("Error parsing video ID from URL: {}", err);
-            eprintln!("{} Invalid YouTube URL", "Error:".red().bold());
-            eprintln!("  Please provide a valid YouTube video URL");
-            eprintln!("  Example: https://www.youtube.com/watch?v=VIDEO_ID");
-            return Err(Box::new(err));
-        }
+    // Check if yt-dlp is installed
+    let yt_dlp_check = if cfg!(target_os = "windows") {
+        Command::new("where").arg("yt-dlp").output()
+    } else {
+        Command::new("which").arg("yt-dlp").output()
     };
 
-    // Create a VideoFetcher instance from the video ID
-    println!("{} Fetching video information...", "→".cyan());
-    let fetcher = match VideoFetcher::from_id(id.into_owned()) {
-        Ok(fetcher) => fetcher,
-        Err(err) => {
-            error!("Error creating VideoFetcher: {}", err);
-            eprintln!("{} Failed to create video fetcher", "Error:".red().bold());
-            return Err(Box::new(err));
-        }
-    };
+    match yt_dlp_check {
+        Ok(output) if !output.status.success() => {
+            eprintln!("{} yt-dlp is not installed", "Error:".red().bold());
+            eprintln!("\n{}", "Installation Instructions:".yellow().bold());
 
-    // Fetch video information
-    let descrambler = match fetcher.fetch().await {
-        Ok(descrambler) => {
-            println!("{} Video information retrieved", "✓".green());
-            descrambler
+            if cfg!(target_os = "windows") {
+                eprintln!("  Windows:");
+                eprintln!("    • Using winget: {}", "winget install yt-dlp".green());
+                eprintln!("    • Using chocolatey: {}", "choco install yt-dlp".green());
+                eprintln!("    • Using pip: {}", "pip install yt-dlp".green());
+            } else if cfg!(target_os = "macos") {
+                eprintln!("  macOS:");
+                eprintln!("    • Using homebrew: {}", "brew install yt-dlp".green());
+                eprintln!("    • Using pip: {}", "pip install yt-dlp".green());
+            } else {
+                eprintln!("  Linux:");
+                eprintln!("    • Using pip: {}", "pip install yt-dlp".green());
+                eprintln!(
+                    "    • Or download from: {}",
+                    "https://github.com/yt-dlp/yt-dlp".cyan()
+                );
+            }
+
+            return Err("yt-dlp not found".into());
         }
-        Err(err) => {
-            error!("Error fetching video information: {}", err);
+        Err(e) => {
             eprintln!(
-                "{} Failed to fetch video information",
-                "Error:".red().bold()
+                "{} Failed to check for yt-dlp: {}",
+                "Error:".red().bold(),
+                e
             );
-            eprintln!("  The video might be private, age-restricted, or unavailable");
-            return Err(Box::new(err));
+            return Err(e.into());
         }
+        _ => {
+            println!("{} yt-dlp found", "✓".green());
+        }
+    }
+
+    // Build format string based on quality
+    let format_arg = match quality.to_lowercase().as_str() {
+        "worst" => "worstvideo+worstaudio/worst",
+        "audio" => "bestaudio/best",
+        _ => "bestvideo+bestaudio/best", // Default to best
     };
 
-    // Descramble the video
-    println!("{} Processing video data...", "→".cyan());
-    let video = match descrambler.descramble() {
-        Ok(video) => {
-            let title = video.video_details().title.clone();
-            let author = video.video_details().author.clone();
+    println!("{} Quality: {}", "→".cyan(), quality.yellow());
+    println!("{} Format: {}", "→".cyan(), format_arg.yellow());
+    println!("{} Destination: {}", "→".cyan(), download_path.yellow());
+    println!();
 
-            println!("\n{}", "Video Details:".yellow().bold());
-            println!("  Title:  {}", title.green());
-            println!("  Author: {}", author.green());
-            println!();
+    // Build yt-dlp command
+    let mut cmd = Command::new("yt-dlp");
 
-            video
+    // Add format argument
+    if quality.to_lowercase() == "audio" {
+        cmd.arg("-x")
+            .arg("--audio-format")
+            .arg("mp3")
+            .arg("-f")
+            .arg(format_arg);
+    } else {
+        cmd.arg("-f").arg(format_arg);
+    }
+
+    // Add other arguments
+    cmd.arg("--progress")
+        .arg("--newline")
+        .arg("-o")
+        .arg(format!("{}/%(title)s.%(ext)s", download_path))
+        .arg(url)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+
+    println!("{} Starting download...", "→".cyan());
+
+    // Execute command
+    let output = cmd.output()?;
+
+    if output.status.success() {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+
+        // Print relevant output lines
+        for line in stdout.lines() {
+            if line.contains("Destination:")
+                || line.contains("100%")
+                || line.contains("has already been downloaded")
+            {
+                println!("{}", line);
+            }
         }
-        Err(err) => {
-            error!("Error descrambling video: {}", err);
-            eprintln!("{} Failed to process video data", "Error:".red().bold());
-            return Err(Box::new(err));
-        }
-    };
 
-    // Create progress bar
-    let pb = ProgressBar::new(100);
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {percent}% {msg}")
-            .unwrap()
-            .progress_chars("#>-"),
-    );
+        println!("\n{} Download complete!", "✓".green().bold());
+        Ok(())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        eprintln!("\n{} Download failed", "✗".red().bold());
+        eprintln!("{}", stderr);
 
-    pb.set_message("Downloading...");
+        eprintln!("\n{}", "Troubleshooting:".yellow().bold());
+        eprintln!("  • Check your internet connection");
+        eprintln!("  • Verify the YouTube URL is correct");
+        eprintln!("  • Make sure the video is not private or restricted");
+        eprintln!(
+            "  • Try updating yt-dlp: {}",
+            "pip install -U yt-dlp".green()
+        );
 
-    // Select stream based on quality
-    let stream = match quality.to_lowercase().as_str() {
-        "worst" => video.worst_quality(),
-        "audio" => video.best_audio(),
-        _ => video.best_quality(), // Default to best
-    };
-
-    let stream = match stream {
-        Some(s) => s,
-        None => {
-            eprintln!(
-                "{} Requested quality '{}' not found, falling back to best quality",
-                "Warning:".yellow().bold(),
-                quality
-            );
-            video.best_quality().ok_or("No streams available")?
-        }
-    };
-
-    // Download the selected stream to the specified path
-    println!(
-        "{} Starting download ({}) to: {}",
-        "→".cyan(),
-        quality.yellow(),
-        download_path.yellow()
-    );
-
-    match stream.download_to_dir(download_path).await {
-        Ok(path) => {
-            pb.finish_with_message("Complete!");
-            println!("\n{} Download complete!", "✓".green().bold());
-            println!("  Saved to: {}", path.display().to_string().green());
-            Ok(())
-        }
-        Err(err) => {
-            pb.finish_with_message("Failed");
-            error!("Error downloading video: {}", err);
-            eprintln!("\n{} Download failed", "✗".red().bold());
-            eprintln!("  Error: {}", err.to_string().yellow());
-            eprintln!("\n{}", "Troubleshooting:".yellow().bold());
-            eprintln!("  • Check your internet connection");
-            eprintln!("  • Verify the download path is writable");
-            eprintln!("  • Try a different video URL");
-            Err(Box::new(err))
-        }
+        Err(format!("yt-dlp failed with exit code: {}", output.status).into())
     }
 }
