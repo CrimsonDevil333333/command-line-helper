@@ -1,5 +1,5 @@
 use colored::Colorize;
-use dialoguer::{Confirm, Select};
+use dialoguer::Confirm;
 use std::process::Command;
 
 pub struct ToolInstaller {

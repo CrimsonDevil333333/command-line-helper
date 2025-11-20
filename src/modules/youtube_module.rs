@@ -1,5 +1,4 @@
 use colored::Colorize;
-use std::path::Path;
 use std::process::{Command, Stdio};
 
 /// Downloads a YouTube video using yt-dlp
