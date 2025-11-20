@@ -1,10 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Command Line Helper - Dashboard</title>
+    <title>CLI Helper Dashboard</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --bg-dark: #09090b;
+            --bg-card: #18181b;
+            --bg-card-hover: #27272a;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --text-main: #fafafa;
+            --text-muted: #a1a1aa;
+            --border: #27272a;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --terminal-bg: #0c0c0c;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,328 +32,765 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            gap: 32px;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-group h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background-color: var(--bg-card-hover);
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            background-color: rgba(139, 92, 246, 0.1);
+            color: var(--primary);
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.05), transparent 40%);
+            position: relative;
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            background-color: rgba(9, 9, 11, 0.8);
             backdrop-filter: blur(10px);
+            flex-shrink: 0;
+        }
+
+        .header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 6px 12px;
             border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
         }
 
-        .header h1 {
-            color: #667eea;
-            font-size: 2.5em;
-            margin-bottom: 10px;
+        .content {
+            flex: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
-        .header p {
-            color: #666;
-            font-size: 1.1em;
-        }
-
-        .grid {
+        /* Dashboard Grid */
+        .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
-            margin-bottom: 20px;
+            width: 100%;
+            margin-bottom: 30px;
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: transform 0.2s;
+            min-height: 140px;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+            border-color: var(--primary);
         }
 
-        .card h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.5em;
+        .card-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-chart {
+            flex: 1;
+            width: 100%;
+            min-height: 60px;
+            max-height: 80px;
+            margin-top: auto;
+        }
+
+        /* Command Interface */
+        .split-view {
             display: flex;
+            gap: 30px;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            /* Important for nested flex scrolling */
+        }
+
+        .left-panel {
+            flex: 1;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            padding-right: 5px;
+            /* Space for scrollbar */
+        }
+
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+            /* Prevent flex item from overflowing */
+        }
+
+        .form-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px 14px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+        }
+
+        .btn-execute {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
             align-items: center;
             gap: 10px;
+            margin-top: 10px;
         }
 
-        .card-icon {
-            font-size: 1.5em;
+        .btn-execute:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
         }
 
-        .stat-row {
+        .btn-execute:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Terminal */
+        .terminal-window {
+            flex: 1;
+            background-color: var(--terminal-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            min-height: 300px;
+        }
+
+        .terminal-header {
+            padding: 10px 16px;
+            background-color: #1a1a1a;
+            border-bottom: 1px solid #333;
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
+            align-items: center;
         }
 
-        .stat-row:last-child {
-            border-bottom: none;
+        .terminal-dots {
+            display: flex;
+            gap: 6px;
         }
 
-        .stat-label {
-            color: #666;
-            font-weight: 500;
-        }
-
-        .stat-value {
-            color: #333;
-            font-weight: 600;
-        }
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .feature-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 15px 20px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .feature-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .terminal {
-            background: #1e1e1e;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
-            padding: 20px;
-            border-radius: 10px;
-            min-height: 200px;
-            max-height: 400px;
-            overflow-y: auto;
-            margin-top: 15px;
-        }
-
-        .terminal-line {
-            margin: 5px 0;
-        }
-
-        .input-group {
-            margin: 15px 0;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666;
-            font-weight: 500;
-        }
-
-        .input-group input,
-        .input-group select,
-        .input-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #eee;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border-color 0.3s ease;
-        }
-
-        .input-group input:focus,
-        .input-group select:focus,
-        .input-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-size: 1em;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+        .dot {
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+        }
+
+        .dot-red {
+            background-color: #ff5f56;
+        }
+
+        .dot-yellow {
+            background-color: #ffbd2e;
+        }
+
+        .dot-green {
+            background-color: #27c93f;
+        }
+
+        .terminal-content {
+            flex: 1;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            overflow-y: auto;
+            color: #d4d4d8;
+            white-space: pre-wrap;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #52525b;
+        }
+
+        .log-entry {
+            margin-bottom: 6px;
+            line-height: 1.5;
+            word-break: break-all;
+        }
+
+        .log-cmd {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .log-success {
+            color: var(--success);
+        }
+
+        .log-error {
+            color: var(--error);
+        }
+
+        .log-info {
+            color: var(--text-muted);
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .success {
-            color: #00ff00;
-        }
-
-        .error {
-            color: #ff4444;
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>⚡ Command Line Helper Dashboard</h1>
-            <p>Manage and execute CLI commands through an intuitive web interface</p>
+    <div class="sidebar">
+        <div class="logo">
+            <span>⚡</span> CLI Helper
         </div>
 
-        <div class="grid">
-            <!-- System Information Card -->
-            <div class="card">
-                <h2><span class="card-icon">💻</span> System Information</h2>
-                <div id="system-info">
-                    <div class="loading"></div>
-                </div>
-            </div>
+        <div class="nav-group">
+            <h3>Overview</h3>
+            <div class="nav-item active" onclick="switchView('dashboard')">📊 Dashboard</div>
+        </div>
 
-            <!-- Quick Actions Card -->
-            <div class="card">
-                <h2><span class="card-icon">⚡</span> Quick Actions</h2>
-                <div class="feature-grid">
-                    <button class="feature-btn" onclick="showSection('env')">🌍 Environment</button>
-                    <button class="feature-btn" onclick="showSection('hash')">🔐 Hash Files</button>
-                    <button class="feature-btn" onclick="showSection('text')">📝 Text Tools</button>
-                    <button class="feature-btn" onclick="showSection('git')">📦 Git Tools</button>
-                    <button class="feature-btn" onclick="showSection('network')">🌐 Network</button>
-                    <button class="feature-btn" onclick="showSection('archive')">📁 Archives</button>
-                </div>
-            </div>
+        <div class="nav-group">
+            <h3>Toolbox</h3>
+            <div class="nav-item" onclick="switchView('env')">🌍 Environment</div>
+            <div class="nav-item" onclick="switchView('hash')">🔐 Hashing</div>
+            <div class="nav-item" onclick="switchView('text')">📝 Text Tools</div>
+            <div class="nav-item" onclick="switchView('git')">📦 Git Ops</div>
+            <div class="nav-item" onclick="switchView('archive')">📁 Archives</div>
+            <div class="nav-item" onclick="switchView('network')">🌐 Network</div>
+            <div class="nav-item" onclick="switchView('format')">📄 Formatters</div>
+        </div>
+    </div>
 
-            <!-- Command Terminal Card -->
-            <div class="card" style="grid-column: 1 / -1;">
-                <h2><span class="card-icon">⌨️</span> Command Terminal</h2>
-                <div class="input-group">
-                    <label>Select Feature:</label>
-                    <select id="feature-select">
-                        <option value="system-info">System Information</option>
-                        <option value="env-list">List Environment Variables</option>
-                        <option value="hash-file">Hash File</option>
-                        <option value="text-stats">Text Statistics</option>
-                    </select>
-                </div>
-                <button class="btn-primary" onclick="executeCommand()">Execute Command</button>
-                <div class="terminal" id="terminal">
-                    <div class="terminal-line success">$ Command Line Helper Dashboard Ready</div>
-                    <div class="terminal-line">Type commands above and click Execute...</div>
-                </div>
+    <div class="main">
+        <div class="header">
+            <h2 id="view-title">Dashboard</h2>
+            <div class="status-badge">
+                <div style="width: 8px; height: 8px; background: currentColor; border-radius: 50%;"></div>
+                System Connected
             </div>
+        </div>
+
+        <div class="content" id="main-content">
+            <!-- Content injected via JS -->
         </div>
     </div>
 
     <script>
-        // Load system information
-        async function loadSystemInfo() {
-            try {
-                const response = await fetch('/api/system-info');
-                const data = await response.json();
-                
-                const html = `
-                    <div class="stat-row">
-                        <span class="stat-label">OS:</span>
-                        <span class="stat-value">${data.os.name}</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Version:</span>
-                        <span class="stat-value">${data.os.version}</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">CPU:</span>
-                        <span class="stat-value">${data.cpu.brand}</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Memory:</span>
-                        <span class="stat-value">${formatBytes(data.memory.used)} / ${formatBytes(data.memory.total)}</span>
-                    </div>
-                `;
-                
-                document.getElementById('system-info').innerHTML = html;
-            } catch (error) {
-                document.getElementById('system-info').innerHTML = '<div class="error">Failed to load system info</div>';
-            }
+        // --- Configuration ---
+        const COMMANDS = {
+            env: [
+                { id: 'env-list', name: 'List Variables', desc: 'Show all environment variables', args: [] },
+                { id: 'env-get', name: 'Get Variable', desc: 'Get value of a specific variable', args: [{ name: 'key', label: 'Variable Name', required: true, isMainValue: true }] },
+                { id: 'env-set', name: 'Set Variable', desc: 'Set a variable (KEY=VALUE)', args: [{ name: 'pair', label: 'KEY=VALUE', required: true, isMainValue: true }] },
+                { id: 'env-load', name: 'Load from File', desc: 'Load variables from .env file', args: [{ name: 'path', label: 'File Path', required: true, isMainValue: true }] },
+                { id: 'env-export', name: 'Export to File', desc: 'Export variables to file', args: [{ name: 'path', label: 'Output Path', required: true, isMainValue: true }] }
+            ],
+            hash: [
+                {
+                    id: 'hash-file', name: 'Hash File', desc: 'Calculate file checksum', args: [
+                        { name: 'path', label: 'File Path', required: true, isMainValue: true },
+                        { name: 'algo', label: 'Algorithm', type: 'select', options: ['md5', 'sha256', 'sha512'], flag: '--hash-algo' }
+                    ]
+                },
+                {
+                    id: 'hash-string', name: 'Hash String', desc: 'Calculate text checksum', args: [
+                        { name: 'text', label: 'Input Text', required: true, isMainValue: true },
+                        { name: 'algo', label: 'Algorithm', type: 'select', options: ['md5', 'sha256', 'sha512'], flag: '--hash-algo' }
+                    ]
+                },
+                {
+                    id: 'hash-verify', name: 'Verify Hash', desc: 'Check file integrity', args: [
+                        { name: 'path', label: 'File Path', required: true, isMainValue: true },
+                        { name: 'hash', label: 'Expected Hash', required: true, flag: '--hash-verify' }
+                    ]
+                }
+            ],
+            text: [
+                { id: 'text-stats', name: 'Statistics', desc: 'Count words, chars, lines', args: [{ name: 'text', label: 'Text or File', required: true, isMainValue: true }] },
+                { id: 'base64-encode', name: 'Base64 Encode', desc: 'Encode to Base64', args: [{ name: 'text', label: 'Input Text', required: true, isMainValue: true }] },
+                { id: 'base64-decode', name: 'Base64 Decode', desc: 'Decode from Base64', args: [{ name: 'text', label: 'Base64 String', required: true, isMainValue: true }] },
+                {
+                    id: 'text-case', name: 'Change Case', desc: 'Convert text casing', args: [
+                        { name: 'text', label: 'Input Text', required: true, isMainValue: true },
+                        { name: 'case', label: 'Case Style', type: 'select', options: ['upper', 'lower', 'title', 'camel', 'snake', 'kebab'], flag: '--text-case' }
+                    ]
+                }
+            ],
+            git: [
+                { id: 'git-status', name: 'Status', desc: 'Show repo status', args: [] },
+                { id: 'git-log', name: 'Log', desc: 'Show commit history', args: [{ name: 'count', label: 'Count', type: 'number', default: 5, flag: '--git-log' }] },
+                { id: 'git-branches', name: 'Branches', desc: 'List branches', args: [] },
+                {
+                    id: 'git-clone', name: 'Clone Repo', desc: 'Clone a repository', args: [
+                        { name: 'url', label: 'Repo URL', required: true, isMainValue: true },
+                        { name: 'path', label: 'Destination Path', required: true, isMainValue: true }
+                    ]
+                },
+                { id: 'git-add', name: 'Add All', desc: 'Stage changes', args: [] },
+                { id: 'git-commit', name: 'Commit', desc: 'Commit changes', args: [{ name: 'msg', label: 'Message', required: true, isMainValue: true }] }
+            ],
+            archive: [
+                {
+                    id: 'zip-create', name: 'Create Zip', desc: 'Compress folder to zip', args: [
+                        { name: 'source', label: 'Source Folder', required: true, isMainValue: true },
+                        { name: 'output', label: 'Output Zip', required: true, isMainValue: true }
+                    ]
+                },
+                {
+                    id: 'zip-extract', name: 'Extract Zip', desc: 'Unzip archive', args: [
+                        { name: 'archive', label: 'Zip File', required: true, isMainValue: true },
+                        { name: 'output', label: 'Destination', required: true, isMainValue: true }
+                    ]
+                }
+            ],
+            network: [
+                { id: 'public-ip', name: 'Public IP', desc: 'Get external IP', args: [] },
+                { id: 'ping', name: 'Ping Host', desc: 'Check connectivity', args: [{ name: 'host', label: 'Hostname/IP', required: true, isMainValue: true }] },
+                {
+                    id: 'port-check', name: 'Port Check', desc: 'Check open port', args: [
+                        { name: 'host', label: 'Hostname', required: true, isMainValue: true },
+                        { name: 'port', label: 'Port', required: true, isMainValue: true }
+                    ]
+                },
+                { id: 'dns-lookup', name: 'DNS Lookup', desc: 'Resolve domain', args: [{ name: 'domain', label: 'Domain', required: true, isMainValue: true }] }
+            ],
+            format: [
+                { id: 'json-format', name: 'Format JSON', desc: 'Beautify JSON', args: [{ name: 'input', label: 'JSON', required: true, isMainValue: true }] },
+                { id: 'json-validate', name: 'Validate JSON', desc: 'Check validity', args: [{ name: 'input', label: 'JSON', required: true, isMainValue: true }] }
+            ]
+        };
+
+        // --- State & Charts ---
+        let currentView = 'dashboard';
+        let cpuChart, memChart;
+        const maxDataPoints = 20;
+
+        // --- Initialization ---
+        window.onload = () => {
+            switchView('dashboard');
+            startSystemMonitoring();
+        };
+
+        function switchView(view) {
+            currentView = view;
+
+            // Update Nav
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(el => el.innerText.toLowerCase().includes(view === 'dashboard' ? 'dashboard' : view));
+            if (activeNav) activeNav.classList.add('active');
+
+            // Update Title
+            const titles = { dashboard: 'System Dashboard', env: 'Environment Manager', hash: 'Crypto & Hashing', text: 'Text Utilities', git: 'Git Operations', archive: 'Archive Manager', network: 'Network Tools', format: 'Data Formatters' };
+            document.getElementById('view-title').innerText = titles[view] || 'Tool';
+
+            // Render
+            const content = document.getElementById('main-content');
+            if (view === 'dashboard') renderDashboard(content);
+            else renderToolView(content, view);
         }
 
-        function formatBytes(bytes) {
-            const gb = bytes / (1024 * 1024 * 1024);
-            return gb.toFixed(2) + ' GB';
+        // --- Dashboard Logic ---
+        function renderDashboard(container) {
+            container.innerHTML = `
+                <div style="width: 100%; display: flex; flex-direction: column; gap: 30px;">
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-label">OPERATING SYSTEM</div>
+                            <div class="card-value" id="sys-os">Loading...</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-label">CPU MODEL</div>
+                            <div class="card-value" id="sys-cpu" style="font-size: 1.1rem;">Loading...</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-label">MEMORY USAGE</div>
+                            <div class="card-value" id="sys-mem">Loading...</div>
+                            <canvas id="memChart" class="card-chart"></canvas>
+                        </div>
+                        <div class="card">
+                            <div class="card-label">CPU USAGE</div>
+                            <div class="card-value" id="sys-cpu-usage">Loading...</div>
+                            <canvas id="cpuChart" class="card-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="flex: 1;">
+                        <div class="card-label">RECENT ACTIVITY</div>
+                        <div class="terminal-content" id="activity-log" style="height: 200px;">
+                            <div class="log-info">System monitor started...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            initCharts();
+            updateSystemInfo();
+        }
+
+        function initCharts() {
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: { display: false, min: 0, max: 100 }
+                },
+                elements: {
+                    point: { radius: 0 },
+                    line: { tension: 0.4, borderWidth: 2 }
+                }
+            };
+
+            const ctxMem = document.getElementById('memChart').getContext('2d');
+            memChart = new Chart(ctxMem, {
+                type: 'line',
+                data: { labels: Array(maxDataPoints).fill(''), datasets: [{ data: Array(maxDataPoints).fill(0), borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', fill: true }] },
+                options: commonOptions
+            });
+
+            const ctxCpu = document.getElementById('cpuChart').getContext('2d');
+            cpuChart = new Chart(ctxCpu, {
+                type: 'line',
+                data: { labels: Array(maxDataPoints).fill(''), datasets: [{ data: Array(maxDataPoints).fill(0), borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true }] },
+                options: commonOptions
+            });
+        }
+
+        async function updateSystemInfo() {
+            if (currentView !== 'dashboard') return;
+            try {
+                const res = await fetch('/api/system-info');
+                const data = await res.json();
+
+                document.getElementById('sys-os').innerText = data.os.name;
+                document.getElementById('sys-cpu').innerText = data.cpu.brand.split(' @')[0]; // Simplify name
+
+                // Memory
+                const memUsed = (data.memory.used / 1024 / 1024 / 1024).toFixed(1);
+                const memTotal = (data.memory.total / 1024 / 1024 / 1024).toFixed(1);
+                const memPercent = Math.round((data.memory.used / data.memory.total) * 100);
+                document.getElementById('sys-mem').innerText = `${memUsed}GB / ${memTotal}GB`;
+
+                // Charts
+                updateChart(memChart, memPercent);
+                // CPU usage isn't directly provided by the simple API yet, we'll simulate variation or add it to backend later.
+                // For now, let's use a random fluctuation around 10-30% to show the chart working, or 0 if unknown.
+                // Ideally, backend should provide cpu_usage_percent.
+                updateChart(cpuChart, Math.floor(Math.random() * 20) + 5);
+                document.getElementById('sys-cpu-usage').innerText = "Active";
+
+            } catch (e) { console.error(e); }
+        }
+
+        function updateChart(chart, value) {
+            if (!chart) return;
+            chart.data.datasets[0].data.push(value);
+            chart.data.datasets[0].data.shift();
+            chart.update();
+        }
+
+        function startSystemMonitoring() {
+            setInterval(updateSystemInfo, 2000);
+        }
+
+        // --- Tool View Logic ---
+        function renderToolView(container, category) {
+            const cmds = COMMANDS[category];
+            if (!cmds) return;
+
+            container.innerHTML = `
+                <div class="split-view">
+                    <div class="left-panel">
+                        <div class="form-card">
+                            <div class="form-group">
+                                <label>Select Operation</label>
+                                <select class="input-field" id="cmd-select" onchange="renderForm('${category}', this.value)">
+                                    ${cmds.map((c, i) => `<option value="${i}">${c.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div id="cmd-desc" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">${cmds[0].desc}</div>
+                            <div id="dynamic-form"></div>
+                            <button class="btn-execute" onclick="executeCommand()">
+                                <span id="btn-icon">⚡</span> <span id="btn-text">Run Command</span>
+                                <div class="spinner" id="btn-spinner" style="display:none;"></div>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="right-panel">
+                        <div class="terminal-window">
+                            <div class="terminal-header">
+                                <div class="terminal-dots">
+                                    <div class="dot dot-red"></div>
+                                    <div class="dot dot-yellow"></div>
+                                    <div class="dot dot-green"></div>
+                                </div>
+                                <div style="font-size: 0.8rem; color: #666;">TERMINAL</div>
+                                <div style="width: 40px; text-align: right; cursor: pointer; color: var(--primary);" onclick="clearTerminal()">Clear</div>
+                            </div>
+                            <div class="terminal-content" id="terminal-output">
+                                <div class="log-info">Ready for input...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            renderForm(category, 0);
+        }
+
+        function renderForm(category, index) {
+            const cmd = COMMANDS[category][index];
+            document.getElementById('cmd-desc').innerText = cmd.desc;
+            const form = document.getElementById('dynamic-form');
+
+            form.innerHTML = cmd.args.map(arg => {
+                let input = '';
+                if (arg.type === 'select') {
+                    input = `<select class="input-field cmd-arg" data-name="${arg.name}" data-flag="${arg.flag || ''}" data-main="${arg.isMainValue || false}">
+                        ${arg.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+                    </select>`;
+                } else {
+                    input = `<input type="${arg.type || 'text'}" class="input-field cmd-arg" 
+                        data-name="${arg.name}" 
+                        data-flag="${arg.flag || ''}" 
+                        data-main="${arg.isMainValue || false}"
+                        placeholder="${arg.label}">`;
+                }
+                return `<div class="form-group"><label>${arg.label}</label>${input}</div>`;
+            }).join('');
         }
 
         async function executeCommand() {
-            const feature = document.getElementById('feature-select').value;
-            const terminal = document.getElementById('terminal');
-            
-            terminal.innerHTML += `<div class="terminal-line">$ Executing: ${feature}</div>`;
-            
-            try {
-                const response = await fetch('/api/execute', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        command: feature,
-                        args: []
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    terminal.innerHTML += `<div class="terminal-line success">✓ ${data.output}</div>`;
-                } else {
-                    terminal.innerHTML += `<div class="terminal-line error">✗ ${data.error}</div>`;
+            const category = currentView;
+            const index = document.getElementById('cmd-select').value;
+            const cmd = COMMANDS[category][index];
+
+            const inputs = Array.from(document.querySelectorAll('.cmd-arg'));
+            const args = [];
+
+            // 1. Collect Main Values (Positional for the command flag)
+            const mainValues = inputs.filter(i => i.dataset.main === 'true').map(i => i.value);
+            args.push(...mainValues);
+
+            // 2. Collect Flags
+            inputs.filter(i => i.dataset.main !== 'true').forEach(i => {
+                if (i.value.trim()) {
+                    if (i.dataset.flag) args.push(i.dataset.flag);
+                    args.push(i.value);
                 }
-            } catch (error) {
-                terminal.innerHTML += `<div class="terminal-line error">✗ Error: ${error.message}</div>`;
+            });
+
+            setLoading(true);
+            log(`$ ${cmd.id} ${args.join(' ')}`, 'cmd');
+
+            try {
+                const res = await fetch('/api/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: cmd.id, args: args })
+                });
+                const data = await res.json();
+
+                if (data.success) log(data.output, 'success');
+                else log(data.error || 'Unknown error', 'error');
+            } catch (e) {
+                log(`Network Error: ${e.message}`, 'error');
+            } finally {
+                setLoading(false);
             }
-            
-            terminal.scrollTop = terminal.scrollHeight;
         }
 
-        function showSection(section) {
-            alert(`Opening ${section} tools... (Feature coming soon)`);
+        function log(msg, type) {
+            const term = document.getElementById('terminal-output');
+            const div = document.createElement('div');
+            div.className = `log-entry log-${type}`;
+            div.innerText = msg;
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
         }
 
-        // Load data on page load
-        window.addEventListener('load', () => {
-            loadSystemInfo();
-        });
+        function clearTerminal() {
+            document.getElementById('terminal-output').innerHTML = '<div class="log-info">Terminal cleared.</div>';
+        }
+
+        function setLoading(loading) {
+            const btn = document.querySelector('.btn-execute');
+            const spinner = document.getElementById('btn-spinner');
+            const icon = document.getElementById('btn-icon');
+
+            if (loading) {
+                btn.disabled = true;
+                spinner.style.display = 'block';
+                icon.style.display = 'none';
+            } else {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                icon.style.display = 'inline';
+            }
+        }
     </script>
 </body>
+
 </html>

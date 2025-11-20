@@ -120,26 +120,131 @@ async fn api_env_vars() -> Json<serde_json::Value> {
 async fn api_execute_command(
     Json(payload): Json<CommandRequest>,
 ) -> Result<Json<CommandResponse>, StatusCode> {
-    // For security, we'll only allow specific safe commands
-    let allowed_commands = vec!["system-info", "env-list", "hash-file", "text-stats"];
+    // Expanded whitelist of allowed commands
+    let allowed_commands = vec![
+        // System
+        "system-info",
+        "cpu-info",
+        "memory-info",
+        "disk-info",
+        "network-info",
+        // Env
+        "env-list",
+        "env-get",
+        "env-set",
+        "env-load",
+        "env-export",
+        // Hash
+        "hash-file",
+        "hash-string",
+        "hash-verify",
+        "hash-all",
+        // Text
+        "text-stats",
+        "base64-encode",
+        "base64-decode",
+        "url-encode",
+        "url-decode",
+        "text-case",
+        // Git
+        "git-status",
+        "git-clone",
+        "git-branch",
+        "git-add",
+        "git-commit",
+        "git-branches",
+        "git-log",
+        // Archive
+        "zip-create",
+        "zip-extract",
+        "zip-list",
+        "tar-create",
+        "tar-extract",
+        "tar-list",
+        // Network
+        "port-check",
+        "ping",
+        "public-ip",
+        "http-get",
+        "http-post",
+        "dns-lookup",
+        // Format
+        "json-format",
+        "json-minify",
+        "json-validate",
+        "yaml-format",
+        "yaml-validate",
+        "json-to-yaml",
+        "yaml-to-json",
+        "json-query",
+    ];
 
-    if !allowed_commands.contains(&payload.command.as_str()) {
+    // Basic validation
+    let cmd = payload.command.trim_start_matches("--");
+    if !allowed_commands.contains(&cmd) {
         return Ok(Json(CommandResponse {
             success: false,
             output: String::new(),
-            error: Some("Command not allowed via web interface".to_string()),
+            error: Some(format!(
+                "Command '{}' not allowed via web interface",
+                payload.command
+            )),
         }));
     }
 
-    // Execute command logic here
-    Ok(Json(CommandResponse {
-        success: true,
-        output: format!(
-            "Executed: {} with args: {:?}",
-            payload.command, payload.args
-        ),
-        error: None,
-    }))
+    // Get current executable path
+    let current_exe = match std::env::current_exe() {
+        Ok(exe) => exe,
+        Err(e) => {
+            return Ok(Json(CommandResponse {
+                success: false,
+                output: String::new(),
+                error: Some(format!("Failed to get current executable: {}", e)),
+            }))
+        }
+    };
+
+    // Construct arguments
+    let mut args = Vec::new();
+    // Add the main command flag (e.g., --system-info or --git-status)
+    if !payload.command.starts_with("--") {
+        args.push(format!("--{}", payload.command));
+    } else {
+        args.push(payload.command.clone());
+    }
+
+    // Add any additional arguments
+    args.extend(payload.args.clone());
+
+    // Execute the command
+    use std::process::Command;
+    let output = Command::new(current_exe).args(&args).output();
+
+    match output {
+        Ok(output) => {
+            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+
+            let success = output.status.success();
+            let result_output = if success {
+                stdout
+            } else {
+                format!("{}\n{}", stdout, stderr)
+            };
+            let error = if !success { Some(stderr) } else { None };
+
+            Ok(Json(CommandResponse {
+                success,
+                output: result_output.trim().to_string(),
+                error,
+            }))
+        }
+        Err(e) => Ok(Json(CommandResponse {
+            success: false,
+            output: String::new(),
+            error: Some(format!("Failed to execute command: {}", e)),
+        })),
+    }
 }
 
 async fn api_get_config(State(state): State<AppState>) -> Json<crate::config::Config> {
