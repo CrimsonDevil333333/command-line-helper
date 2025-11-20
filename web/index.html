@@ -421,6 +421,10 @@
             <div class="nav-item" onclick="switchView('archive')">📁 Archives</div>
             <div class="nav-item" onclick="switchView('network')">🌐 Network</div>
             <div class="nav-item" onclick="switchView('format')">📄 Formatters</div>
+            <div class="nav-item" onclick="switchView('file')">📂 File Ops</div>
+            <div class="nav-item" onclick="switchView('media')">🎬 Media</div>
+            <div class="nav-item" onclick="switchView('project')">🚀 Project</div>
+            <div class="nav-item" onclick="switchView('nav')">📍 Navigation</div>
         </div>
     </div>
 
@@ -462,7 +466,7 @@
                     ]
                 },
                 {
-                    id: 'hash-file', name: 'Verify Hash', desc: 'Check file integrity', args: [
+                    id: 'hash-verify', name: 'Verify Hash', desc: 'Check file integrity', args: [
                         { name: 'path', label: 'File Path', required: true, isMainValue: true },
                         { name: 'hash', label: 'Expected Hash', required: true, flag: '--hash-verify' }
                     ]
@@ -520,6 +524,57 @@
             format: [
                 { id: 'json-format', name: 'Format JSON', desc: 'Beautify JSON', args: [{ name: 'input', label: 'JSON', required: true, isMainValue: true }] },
                 { id: 'json-validate', name: 'Validate JSON', desc: 'Check validity', args: [{ name: 'input', label: 'JSON', required: true, isMainValue: true }] }
+            ],
+            file: [
+                {
+                    id: 'copy', name: 'Copy File/Dir', desc: 'Copy file or directory', args: [
+                        { name: 'source', label: 'Source Path', required: true, isMainValue: true },
+                        { name: 'dest', label: 'Destination Path', required: true, flag: '--output-path' }
+                    ]
+                },
+                {
+                    id: 'move', name: 'Move File/Dir', desc: 'Move file or directory', args: [
+                        { name: 'source', label: 'Source Path', required: true, isMainValue: true },
+                        { name: 'dest', label: 'Destination Path', required: true, flag: '--output-path' }
+                    ]
+                },
+                {
+                    id: 'search', name: 'Search Files', desc: 'Find files by name', args: [
+                        { name: 'pattern', label: 'Search Pattern', required: true, isMainValue: true },
+                        { name: 'limit', label: 'Limit Results', type: 'number', default: 10, flag: '--limit' }
+                    ]
+                },
+                {
+                    id: 'data-search', name: 'Search Content', desc: 'Find text in files', args: [
+                        { name: 'text', label: 'Search Text', required: true, isMainValue: true },
+                        { name: 'path', label: 'Search Path', required: true, flag: '--search' },
+                        { name: 'limit', label: 'Limit Results', type: 'number', default: 10, flag: '--limit' }
+                    ]
+                }
+            ],
+            media: [
+                {
+                    id: 'url', name: 'YouTube Download', desc: 'Download video/audio', args: [
+                        { name: 'url', label: 'Video URL', required: true, isMainValue: true },
+                        { name: 'quality', label: 'Quality', type: 'select', options: ['best', 'worst', 'audio'], flag: '--quality' },
+                        { name: 'output', label: 'Output Path', flag: '--output-path' }
+                    ]
+                }
+            ],
+            project: [
+                {
+                    id: 'action', name: 'Project Action', desc: 'Run project command', args: [
+                        { name: 'action', label: 'Action', type: 'select', options: ['run', 'build', 'test', 'clean'], required: true, isMainValue: true },
+                        { name: 'lang', label: 'Language', type: 'select', options: ['rust', 'python', 'node', 'go', 'cpp'], required: true, flag: '--language' }
+                    ]
+                }
+            ],
+            nav: [
+                {
+                    id: 'goto', name: 'Change Directory', desc: 'Change working directory', args: [
+                        { name: 'path', label: 'Target Directory', required: true, isMainValue: true }
+                    ]
+                }
             ]
         };
 
@@ -543,7 +598,20 @@
             if (activeNav) activeNav.classList.add('active');
 
             // Update Title
-            const titles = { dashboard: 'System Dashboard', env: 'Environment Manager', hash: 'Crypto & Hashing', text: 'Text Utilities', git: 'Git Operations', archive: 'Archive Manager', network: 'Network Tools', format: 'Data Formatters' };
+            const titles = {
+                dashboard: 'System Dashboard',
+                env: 'Environment Manager',
+                hash: 'Crypto & Hashing',
+                text: 'Text Utilities',
+                git: 'Git Operations',
+                archive: 'Archive Manager',
+                network: 'Network Tools',
+                format: 'Data Formatters',
+                file: 'File Operations',
+                media: 'Media Tools',
+                project: 'Project Actions',
+                nav: 'Navigation'
+            };
             document.getElementById('view-title').innerText = titles[view] || 'Tool';
 
             // Render

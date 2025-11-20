@@ -1,7 +1,7 @@
 use axum::{
-    extract::{Query, State},
+    extract::State,
     http::StatusCode,
-    response::{Html, IntoResponse, Json},
+    response::{Html, Json},
     routing::{get, post},
     Router,
 };
@@ -10,11 +10,11 @@ use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tower_http::services::ServeDir;
 
 #[derive(Clone)]
 pub struct AppState {
     pub config: Arc<RwLock<crate::config::Config>>,
+    pub cwd: Arc<RwLock<std::path::PathBuf>>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -32,8 +32,11 @@ pub struct CommandResponse {
 
 pub async fn start_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
     let config = crate::config::Config::load().unwrap_or_default();
+    let current_dir = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+
     let state = AppState {
         config: Arc::new(RwLock::new(config)),
+        cwd: Arc::new(RwLock::new(current_dir)),
     };
 
     let app = Router::new()
@@ -98,29 +101,29 @@ async fn api_system_info() -> Json<serde_json::Value> {
         },
         "cpu": {
             "count": sys.cpus().len(),
-            "brand": sys.cpus().first().map(|cpu| cpu.brand()).unwrap_or("Unknown"),
+            "brand": sys.cpus().first().map(|c| c.brand().to_string()).unwrap_or_default(),
+            "usage": sys.global_cpu_info().cpu_usage(),
         },
         "memory": {
             "total": sys.total_memory(),
             "used": sys.used_memory(),
-            "available": sys.available_memory(),
-        }
+            "free": sys.free_memory(),
+        },
+        "uptime": System::uptime(),
     });
 
     Json(info)
 }
 
 async fn api_env_vars() -> Json<serde_json::Value> {
-    use std::env;
-
-    let vars: std::collections::HashMap<String, String> = env::vars().collect();
+    let vars: std::collections::HashMap<String, String> = std::env::vars().collect();
     Json(serde_json::json!(vars))
 }
 
 async fn api_execute_command(
+    State(state): State<AppState>,
     Json(payload): Json<CommandRequest>,
 ) -> Result<Json<CommandResponse>, StatusCode> {
-    // Expanded whitelist of allowed commands
     let allowed_commands = vec![
         // System
         "system-info",
@@ -177,6 +180,14 @@ async fn api_execute_command(
         "json-to-yaml",
         "yaml-to-json",
         "json-query",
+        // New Commands
+        "copy",
+        "move",
+        "search",
+        "data-search",
+        "url",    // YouTube
+        "action", // Language
+        "goto",
     ];
 
     // Basic validation
@@ -190,6 +201,28 @@ async fn api_execute_command(
                 payload.command
             )),
         }));
+    }
+
+    // Handle 'goto' command internally
+    if cmd == "goto" {
+        let path_str = payload.args.first().cloned().unwrap_or_default();
+        let path = std::path::PathBuf::from(&path_str);
+
+        if path.exists() && path.is_dir() {
+            let mut cwd = state.cwd.write().await;
+            *cwd = path.clone();
+            return Ok(Json(CommandResponse {
+                success: true,
+                output: format!("Changed directory to: {}", path.display()),
+                error: None,
+            }));
+        } else {
+            return Ok(Json(CommandResponse {
+                success: false,
+                output: String::new(),
+                error: Some(format!("Directory not found: {}", path_str)),
+            }));
+        }
     }
 
     // Get current executable path
@@ -208,7 +241,11 @@ async fn api_execute_command(
     let mut args = Vec::new();
     // Add the main command flag (e.g., --system-info or --git-status)
     if !payload.command.starts_with("--") {
-        args.push(format!("--{}", payload.command));
+        if payload.command.len() == 1 {
+            args.push(format!("-{}", payload.command));
+        } else {
+            args.push(format!("--{}", payload.command));
+        }
     } else {
         args.push(payload.command.clone());
     }
@@ -218,7 +255,12 @@ async fn api_execute_command(
 
     // Execute the command
     use std::process::Command;
-    let output = Command::new(current_exe).args(&args).output();
+    let cwd = state.cwd.read().await.clone();
+
+    let output = Command::new(current_exe)
+        .current_dir(cwd)
+        .args(&args)
+        .output();
 
     match output {
         Ok(output) => {
