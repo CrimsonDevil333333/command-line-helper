@@ -7,6 +7,7 @@ use rustube::VideoFetcher;
 pub async fn download_video(
     url: &str,
     download_path: &str,
+    quality: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "YouTube Video Downloader".cyan().bold());
     println!("{}", "=".repeat(80).cyan());
@@ -86,18 +87,34 @@ pub async fn download_video(
 
     pb.set_message("Downloading...");
 
-    // Download the best quality video to the specified path
+    // Select stream based on quality
+    let stream = match quality.to_lowercase().as_str() {
+        "worst" => video.worst_quality(),
+        "audio" => video.best_audio(),
+        _ => video.best_quality(), // Default to best
+    };
+
+    let stream = match stream {
+        Some(s) => s,
+        None => {
+            eprintln!(
+                "{} Requested quality '{}' not found, falling back to best quality",
+                "Warning:".yellow().bold(),
+                quality
+            );
+            video.best_quality().ok_or("No streams available")?
+        }
+    };
+
+    // Download the selected stream to the specified path
     println!(
-        "{} Starting download to: {}",
+        "{} Starting download ({}) to: {}",
         "→".cyan(),
+        quality.yellow(),
         download_path.yellow()
     );
-    match video
-        .best_quality()
-        .unwrap()
-        .download_to_dir(download_path)
-        .await
-    {
+
+    match stream.download_to_dir(download_path).await {
         Ok(path) => {
             pb.finish_with_message("Complete!");
             println!("\n{} Download complete!", "✓".green().bold());

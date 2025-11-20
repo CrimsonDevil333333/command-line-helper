@@ -39,6 +39,10 @@ struct Args {
     #[clap(short = 'u', long)]
     url: Option<String>,
 
+    /// Sets the quality for YouTube downloads (best, worst, audio).
+    #[clap(long, default_value = "best")]
+    quality: String,
+
     /// Sets the output path for downloaded videos or destination for --copy/--move operations.
     #[clap(short = 'o', long, default_value = ".")]
     output_path: std::path::PathBuf,
@@ -447,7 +451,9 @@ async fn main() {
     if let Some(url) = &args.url {
         // Download the video
         println!("Downloading video ...");
-        if let Err(err) = download_video(url, &args.output_path.to_string_lossy()).await {
+        if let Err(err) =
+            download_video(url, &args.output_path.to_string_lossy(), &args.quality).await
+        {
             print_error_message(&format!("Error: {}\n", err));
         }
     }
